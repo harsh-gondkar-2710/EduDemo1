@@ -25,7 +25,7 @@ export function PersonalisedTutor() {
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; explanation: string } | null>(null);
   const [tutorView, setTutorView] = useState<TutorView>('lesson');
-  const [videoError, setVideoError] = useState(false);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const { toast } = useToast();
 
   const handleGeneratePlan = async (e: FormEvent) => {
@@ -38,7 +38,7 @@ export function PersonalisedTutor() {
     setCurrentProblemIndex(0);
     setUserAnswer('');
     setTutorView('lesson');
-    setVideoError(false);
+    setCurrentVideoIndex(0);
 
     try {
       // The AI flow can be enhanced to take the subject for more context
@@ -87,7 +87,13 @@ export function PersonalisedTutor() {
     setTutorView('practice');
   }
 
-  const currentVideoId = lessonPlan?.youtubeVideoIds[videoError ? 1 : 0] ?? '';
+  const currentVideoId = lessonPlan?.youtubeVideoIds[currentVideoIndex] ?? '';
+
+  const handleVideoError = () => {
+    if (lessonPlan && currentVideoIndex < lessonPlan.youtubeVideoIds.length - 1) {
+      setCurrentVideoIndex(prevIndex => prevIndex + 1);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -186,19 +192,21 @@ export function PersonalisedTutor() {
                 </CardHeader>
                 <CardContent>
                     <div className="aspect-video">
-                        <iframe
-                            key={currentVideoId}
-                            className="w-full h-full rounded-lg"
-                            src={`https://www.youtube.com/embed/${currentVideoId}`}
-                            title="YouTube video player"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            onError={() => {
-                                if (!videoError && lessonPlan.youtubeVideoIds.length > 1) {
-                                    setVideoError(true);
-                                }
-                            }}
-                        ></iframe>
+                        {currentVideoId ? (
+                            <iframe
+                                key={currentVideoId}
+                                className="w-full h-full rounded-lg"
+                                src={`https://www.youtube.com/embed/${currentVideoId}`}
+                                title="YouTube video player"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                onError={handleVideoError}
+                            ></iframe>
+                        ) : (
+                            <div className="w-full h-full rounded-lg bg-muted flex items-center justify-center">
+                                <p>No videos available for this topic.</p>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
                 <CardFooter className='gap-4'>
