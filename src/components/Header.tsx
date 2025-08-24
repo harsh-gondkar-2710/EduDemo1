@@ -8,11 +8,18 @@ import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, useSid
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/hooks/use-auth';
 import { Separator } from './ui/separator';
+import { useEffect, useState } from 'react';
 
 export function Header() {
   const pathname = usePathname();
   const { state } = useSidebar();
   const { user, logout } = useAuth();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: Target },
@@ -58,33 +65,37 @@ export function Header() {
       <SidebarFooter>
         <Separator className="my-2" />
         <SidebarMenu>
-            <SidebarMenuItem>
-                 <Link href="/profile" className='w-full'>
-                    <SidebarMenuButton
-                        isActive={pathname === '/profile'}
-                        tooltip="Profile"
-                        className="justify-start"
-                    >
-                        <UserIcon />
-                        <span className={`${state === 'collapsed' && 'md:hidden'}`}>Profile</span>
-                    </SidebarMenuButton>
-                </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                {user ? (
-                    <SidebarMenuButton onClick={logout} tooltip="Logout" className="justify-start w-full">
-                        <LogOut />
-                        <span className={`${state === 'collapsed' && 'md:hidden'}`}>Logout</span>
-                    </SidebarMenuButton>
-                ) : (
-                    <Link href="/login" className='w-full'>
-                        <SidebarMenuButton tooltip="Login" className="justify-start">
-                            <LogIn />
-                            <span className={`${state === 'collapsed' && 'md:hidden'}`}>Login</span>
-                        </SidebarMenuButton>
-                    </Link>
-                )}
-            </SidebarMenuItem>
+            {isClient && (
+                <>
+                    <SidebarMenuItem>
+                        <Link href="/profile" className='w-full'>
+                            <SidebarMenuButton
+                                isActive={pathname === '/profile'}
+                                tooltip="Profile"
+                                className="justify-start"
+                            >
+                                <UserIcon />
+                                <span className={`${state === 'collapsed' && 'md:hidden'}`}>Profile</span>
+                            </SidebarMenuButton>
+                        </Link>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        {user ? (
+                            <SidebarMenuButton onClick={logout} tooltip="Logout" className="justify-start w-full">
+                                <LogOut />
+                                <span className={`${state === 'collapsed' && 'md:hidden'}`}>Logout</span>
+                            </SidebarMenuButton>
+                        ) : (
+                            <Link href="/login" className='w-full'>
+                                <SidebarMenuButton tooltip="Login" className="justify-start">
+                                    <LogIn />
+                                    <span className={`${state === 'collapsed' && 'md:hidden'}`}>Login</span>
+                                </SidebarMenuButton>
+                            </Link>
+                        )}
+                    </SidebarMenuItem>
+                </>
+            )}
         </SidebarMenu>
       </SidebarFooter>
     </>
