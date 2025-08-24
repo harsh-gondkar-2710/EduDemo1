@@ -26,6 +26,13 @@ export type GenerateVideoOutput = z.infer<typeof GenerateVideoOutputSchema>;
 export async function generateVideo(
   input: GenerateVideoInput
 ): Promise<GenerateVideoOutput> {
+  // Since video generation can be slow, we'll increase the timeout for this server action.
+  // This is a Next.js-specific feature.
+  const { unstable_setRequestStore } = await import('next/dist/server/web/spec-extension/request');
+  unstable_setRequestStore(new Request(new URL('http://localhost')), {
+    ...new Response(),
+    signal: AbortSignal.timeout(120000) // 2 minutes
+  });
   return generateVideoFlow(input);
 }
 
@@ -37,12 +44,8 @@ const generateVideoFlow = ai.defineFlow(
   },
   async (input) => {
     let { operation } = await ai.generate({
-      model: googleAI.model('veo-2.0-generate-001'),
+      model: googleAI.model('veo-3.0-generate-preview'),
       prompt: `Generate a short, educational video explaining the concept of "${input.topic}". The video should be visually engaging and suitable for a learning context.`,
-      config: {
-        durationSeconds: 5,
-        aspectRatio: '16:9',
-      },
     });
 
     if (!operation) {
