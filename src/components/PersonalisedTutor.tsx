@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,12 +15,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 type TutorView = 'lesson' | 'practice';
 
+type YouTubeVideo = {
+  id: {
+    videoId: string;
+  };
+  snippet: {
+    title: string;
+  };
+};
+
 const subjects = ['General', 'Maths', 'Physics', 'Chemistry', 'Biology', 'History', 'Languages'];
 
 export function PersonalisedTutor() {
   const [topic, setTopic] = useState('');
   const [subject, setSubject] = useState('General');
   const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
+  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
+  const [isFetchingVideos, setIsFetchingVideos] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
@@ -28,12 +39,39 @@ export function PersonalisedTutor() {
   const [tutorView, setTutorView] = useState<TutorView>('lesson');
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (lessonPlan?.title) {
+      const fetchVideos = async () => {
+        setIsFetchingVideos(true);
+        try {
+          const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(`Khan Academy ${lessonPlan.title}`)}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch videos');
+          }
+          const data = await response.json();
+          setVideos(data.items || []);
+        } catch (error) {
+          console.error('Error fetching videos:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Video Search Error',
+            description: 'Could not fetch recommended videos from YouTube.',
+          });
+        } finally {
+          setIsFetchingVideos(false);
+        }
+      };
+      fetchVideos();
+    }
+  }, [lessonPlan, toast]);
+
   const handleGeneratePlan = async (e: FormEvent) => {
     e.preventDefault();
     if (!topic) return;
 
     setIsLoading(true);
     setLessonPlan(null);
+    setVideos([]);
     setFeedback(null);
     setCurrentProblemIndex(0);
     setUserAnswer('');
@@ -158,17 +196,22 @@ export function PersonalisedTutor() {
                     <p>{lessonPlan.example.problem}</p>
                     <p><strong>Solution:</strong> {lessonPlan.example.solution}</p>
 
-                    {lessonPlan.youtubeVideoIds && lessonPlan.youtubeVideoIds.length > 0 && (
+                    {isFetchingVideos ? (
+                        <div className='mt-6 space-y-2'>
+                           <Skeleton className='h-4 w-1/2' />
+                           <Skeleton className='h-4 w-2/3' />
+                        </div>
+                    ) : videos.length > 0 && (
                         <>
                             <h3 className="text-lg font-semibold mt-6 flex items-center gap-2">
                                 <Youtube className="text-red-600" />
                                 Recommended Videos
                             </h3>
                             <ul className="list-disc pl-5">
-                                {lessonPlan.youtubeVideoIds.map((videoId) => (
-                                    <li key={videoId}>
-                                        <Link href={`https://www.youtube.com/watch?v=${videoId}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                            Watch on YouTube
+                                {videos.map((video) => (
+                                    <li key={video.id.videoId}>
+                                        <Link href={`https://www.youtube.com/watch?v=${video.id.videoId}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                            {video.snippet.title}
                                         </Link>
                                     </li>
                                 ))}
