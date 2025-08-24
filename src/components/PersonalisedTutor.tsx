@@ -2,13 +2,14 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { generateLessonPlan, type LessonPlan } from '@/ai/flows/generate-lesson-plan';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit, RefreshCw } from 'lucide-react';
+import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit, RefreshCw, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -21,12 +22,12 @@ export function PersonalisedTutor() {
   const [subject, setSubject] = useState('General');
   const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isRefreshingVideos, setIsRefreshingVideos] = useState(false);
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; explanation: string } | null>(null);
   const [tutorView, setTutorView] = useState<TutorView>('lesson');
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [videoError, setVideoError] = useState(false);
   const { toast } = useToast();
 
   const handleGeneratePlan = async (e: FormEvent) => {
@@ -40,6 +41,7 @@ export function PersonalisedTutor() {
     setUserAnswer('');
     setTutorView('lesson');
     setCurrentVideoIndex(0);
+    setVideoError(false);
 
     try {
       // The AI flow can be enhanced to take the subject for more context
@@ -59,10 +61,10 @@ export function PersonalisedTutor() {
 
   const handleCycleVideo = () => {
     if (lessonPlan && lessonPlan.youtubeVideoIds.length > 0) {
+        setVideoError(false);
         setCurrentVideoIndex(prevIndex => (prevIndex + 1) % lessonPlan.youtubeVideoIds.length);
     }
   };
-
 
   const handleCheckAnswer = (e: FormEvent) => {
     e.preventDefault();
@@ -95,13 +97,12 @@ export function PersonalisedTutor() {
     setTutorView('practice');
   }
 
-  const currentVideoId = lessonPlan?.youtubeVideoIds[currentVideoIndex] ?? '';
-
   const handleVideoError = () => {
-    if (lessonPlan && currentVideoIndex < lessonPlan.youtubeVideoIds.length - 1) {
-      setCurrentVideoIndex(prevIndex => prevIndex + 1);
-    }
+    setVideoError(true);
   };
+
+  const currentVideoId = lessonPlan?.youtubeVideoIds[currentVideoIndex];
+  const videoWatchUrl = currentVideoId ? `https://www.youtube.com/watch?v=${currentVideoId}` : '';
 
   return (
     <div className="space-y-8">
@@ -200,11 +201,24 @@ export function PersonalisedTutor() {
                 </CardHeader>
                 <CardContent>
                     <div className="aspect-video">
-                        {isRefreshingVideos ? (
+                        {(!currentVideoId) ? (
                             <div className="w-full h-full rounded-lg bg-muted flex items-center justify-center">
-                                <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+                                <p>No videos available for this topic.</p>
                             </div>
-                        ) : currentVideoId ? (
+                        ) : videoError ? (
+                            <div className="w-full h-full rounded-lg bg-muted flex flex-col items-center justify-center text-center p-4">
+                                <AlertCircle className="h-8 w-8 text-destructive mb-2" />
+                                <p className="font-semibold">Video Unavailable</p>
+                                <p className="text-sm text-muted-foreground">
+                                  This video can't be embedded.
+                                </p>
+                                <Button asChild variant="link" className="mt-2">
+                                    <Link href={videoWatchUrl} target="_blank" rel="noopener noreferrer">
+                                        Watch on YouTube instead
+                                    </Link>
+                                </Button>
+                            </div>
+                        ) : (
                             <iframe
                                 key={currentVideoId}
                                 className="w-full h-full rounded-lg"
@@ -214,10 +228,6 @@ export function PersonalisedTutor() {
                                 allowFullScreen
                                 onError={handleVideoError}
                             ></iframe>
-                        ) : (
-                            <div className="w-full h-full rounded-lg bg-muted flex items-center justify-center">
-                                <p>No videos available for this topic.</p>
-                            </div>
                         )}
                     </div>
                 </CardContent>
@@ -229,10 +239,12 @@ export function PersonalisedTutor() {
                             Practice
                         </Button>
                     </div>
-                    <Button onClick={handleCycleVideo} variant="ghost">
-                        <RefreshCw className="mr-2" />
-                        Refresh
-                    </Button>
+                    {lessonPlan.youtubeVideoIds.length > 1 && (
+                      <Button onClick={handleCycleVideo} variant="ghost">
+                          <RefreshCw className="mr-2" />
+                          Next Video
+                      </Button>
+                    )}
                 </CardFooter>
             </Card>
           )}
