@@ -267,8 +267,8 @@ export function PersonalisedTutor() {
                             Practice
                         </Button>
                     </div>
-                    {videoIds.length > 1 && (
-                      <Button onClick={handleNextVideo} variant="ghost">
+                    {lessonPlan.youtubeVideoIds.length > 0 && (
+                      <Button onClick={handleNextVideo} variant="ghost" disabled={videoIds.length <= 1}>
                           <RefreshCw className="mr-2" />
                           Next Video
                       </Button>
@@ -322,7 +322,3 @@ export function PersonalisedTutor() {
     </div>
   );
 }
-
-  
-
-    
