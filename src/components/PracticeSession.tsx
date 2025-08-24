@@ -9,9 +9,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { adjustDifficulty } from '@/ai/flows/dynamically-adjust-difficulty';
-import type { MathQuestion } from '@/lib/math';
+import type { MathQuestion, Operation } from '@/lib/math';
 import { generateQuestion } from '@/lib/math';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePerformance } from '@/hooks/use-performance';
+import { useRouter } from 'next/navigation';
 
 const TOTAL_QUESTIONS = 10;
 
@@ -19,6 +21,7 @@ type PerformanceRecord = {
   question: string;
   correct: boolean;
   timeTaken: number;
+  operation: Operation;
 };
 
 export function PracticeSession() {
@@ -34,23 +37,38 @@ export function PracticeSession() {
   const [isLoading, setIsLoading] = useState(true);
 
   const { toast } = useToast();
-
-  useEffect(() => {
+  const { addSessionData } = usePerformance();
+  const router = useRouter();
+  
+  const startNewQuestion = (newDifficulty: number) => {
     setIsLoading(true);
-    setCurrentQuestion(generateQuestion(difficulty));
+    setCurrentQuestion(generateQuestion(newDifficulty));
     setStartTime(Date.now());
     setIsLoading(false);
-  }, [difficulty]);
+  }
+
+  useEffect(() => {
+    startNewQuestion(difficulty);
+  }, []);
+
+  useEffect(() => {
+    if (isSessionOver) {
+        addSessionData({
+            score: (correctAnswers / TOTAL_QUESTIONS) * 100,
+            performanceHistory
+        });
+        // Redirect to dashboard or show summary
+    }
+  }, [isSessionOver, correctAnswers, performanceHistory, addSessionData]);
 
   const progressPercentage = useMemo(() => (questionsAnswered / TOTAL_QUESTIONS) * 100, [questionsAnswered]);
 
-  const handleNextQuestion = () => {
-    if (!currentQuestion) return;
-
+  const handleNextQuestion = async () => {
     setFeedback(null);
     setUserAnswer('');
     
     if (questionsAnswered + 1 >= TOTAL_QUESTIONS) {
+      setQuestionsAnswered(prev => prev + 1);
       setIsSessionOver(true);
       return;
     }
@@ -59,32 +77,31 @@ export function PracticeSession() {
 
     if (performanceHistory.length > 0) {
       setIsLoading(true);
-      adjustDifficulty({
-        studentId: 'student-123',
-        currentDifficulty: difficulty,
-        performanceData: JSON.stringify(performanceHistory.slice(-5)),
-      })
-        .then(response => {
-          setDifficulty(response.newDifficulty);
-          toast({
-            title: "Difficulty Adjusted!",
-            description: `New level: ${response.newDifficulty}. ${response.reasoning}`,
-          });
-        })
-        .catch(error => {
-          console.error('Error adjusting difficulty:', error);
-          toast({
-            variant: 'destructive',
-            title: 'AI Error',
-            description: 'Could not adjust difficulty. Continuing at current level.',
-          });
-          setCurrentQuestion(generateQuestion(difficulty));
-          setStartTime(Date.now());
-          setIsLoading(false);
+      try {
+        const response = await adjustDifficulty({
+          studentId: 'student-123',
+          currentDifficulty: difficulty,
+          performanceData: JSON.stringify(performanceHistory.slice(-5)),
         });
+        setDifficulty(response.newDifficulty);
+        startNewQuestion(response.newDifficulty);
+        toast({
+          title: "Difficulty Adjusted!",
+          description: `New level: ${response.newDifficulty}. ${response.reasoning}`,
+        });
+      } catch (error) {
+        console.error('Error adjusting difficulty:', error);
+        toast({
+          variant: 'destructive',
+          title: 'AI Error',
+          description: 'Could not adjust difficulty. Continuing at current level.',
+        });
+        startNewQuestion(difficulty);
+      } finally {
+        setIsLoading(false);
+      }
     } else {
-        setCurrentQuestion(generateQuestion(difficulty));
-        setStartTime(Date.now());
+        startNewQuestion(difficulty);
     }
   };
 
@@ -98,7 +115,7 @@ export function PracticeSession() {
     const timeTaken = (Date.now() - startTime) / 1000;
     setPerformanceHistory(prev => [
       ...prev,
-      { question: currentQuestion.questionText, correct: isCorrect, timeTaken },
+      { question: currentQuestion.questionText, correct: isCorrect, timeTaken, operation: currentQuestion.operation },
     ]);
 
     if (isCorrect) {
@@ -113,13 +130,7 @@ export function PracticeSession() {
   };
 
   const restartSession = () => {
-    setDifficulty(3);
-    setQuestionsAnswered(0);
-    setCorrectAnswers(0);
-    setIsSessionOver(false);
-    setPerformanceHistory([]);
-    setFeedback(null);
-    setUserAnswer('');
+    router.push('/');
   };
 
   if (isSessionOver) {
@@ -136,9 +147,10 @@ export function PracticeSession() {
             Final Score: <strong>{correctAnswers} / {TOTAL_QUESTIONS}</strong>
           </p>
           <p>Your final difficulty level was: <strong>{difficulty}</strong></p>
+          <p className="text-sm text-muted-foreground">Your dashboard has been updated with your latest progress.</p>
         </CardContent>
         <CardFooter>
-          <Button onClick={restartSession}>Start a new session</Button>
+          <Button onClick={restartSession}>Back to Dashboard</Button>
         </CardFooter>
       </Card>
     );

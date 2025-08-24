@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
@@ -9,23 +9,7 @@ import { Lightbulb, BookOpen, Brain, TrendingUp } from 'lucide-react';
 import { generatePersonalizedRecommendations } from '@/ai/flows/generate-personalized-recommendations';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-
-// Mock data
-const progressData = [
-  { date: 'Day 1', score: 60 },
-  { date: 'Day 2', score: 65 },
-  { date: 'Day 3', score: 75 },
-  { date: 'Day 4', score: 70 },
-  { date: 'Day 5', score: 85 },
-  { date: 'Day 6', score: 90 },
-];
-
-const topicPerformanceData = [
-  { topic: 'Addition', strength: 95 },
-  { topic: 'Subtraction', strength: 80 },
-  { topic: 'Multiplication', strength: 70 },
-  { topic: 'Division', strength: 60 },
-];
+import { usePerformance } from '@/hooks/use-performance';
 
 const chartConfig: ChartConfig = {
   score: { label: 'Score', color: 'hsl(var(--primary))' },
@@ -52,6 +36,15 @@ export function Dashboard() {
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { progressData, topicPerformanceData, overallProgress, strengths, weaknesses } = usePerformance();
+  
+  const lastWeekProgress = useMemo(() => {
+    if (progressData.length < 2) return 0;
+    const lastScore = progressData[progressData.length - 1].score;
+    const secondLastScore = progressData[progressData.length - 2].score;
+    if (secondLastScore === 0) return lastScore > 0 ? 100 : 0;
+    return Math.round(((lastScore - secondLastScore) / secondLastScore) * 100);
+  }, [progressData]);
 
   const handleGetRecommendations = async () => {
     setIsLoading(true);
@@ -84,8 +77,10 @@ export function Dashboard() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">82%</div>
-            <p className="text-xs text-muted-foreground">+15% from last week</p>
+            <div className="text-2xl font-bold">{Math.round(overallProgress)}%</div>
+            <p className="text-xs text-muted-foreground">
+                {lastWeekProgress >= 0 ? `+${lastWeekProgress}` : lastWeekProgress}% from last session
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -94,7 +89,7 @@ export function Dashboard() {
             <Brain className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Addition</div>
+            <div className="text-2xl font-bold">{strengths[0] || 'N/A'}</div>
             <p className="text-xs text-muted-foreground">Your strongest area</p>
           </CardContent>
         </Card>
@@ -104,7 +99,7 @@ export function Dashboard() {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Division</div>
+            <div className="text-2xl font-bold">{weaknesses[0] || 'N/A'}</div>
             <p className="text-xs text-muted-foreground">Let's focus here!</p>
           </CardContent>
         </Card>
@@ -114,7 +109,7 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Progress Over Time</CardTitle>
-            <CardDescription>Your scores over the last 6 sessions.</CardDescription>
+            <CardDescription>Your scores over your last sessions.</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[250px] w-full">

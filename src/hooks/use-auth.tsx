@@ -12,9 +12,6 @@ import {
 import { 
   onAuthStateChanged, 
   User, 
-  signOut as firebaseSignOut,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
