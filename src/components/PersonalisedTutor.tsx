@@ -47,27 +47,13 @@ export function PersonalisedTutor() {
       const fetchVideos = async () => {
         setIsFetchingVideos(true);
         try {
-          // First, try searching in the selected language
-          let query = `Khan Academy ${lessonPlan.title} in ${language}`;
-          let response = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
+          const query = `Khan Academy ${lessonPlan.title}`;
+          const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
           if (!response.ok) {
             throw new Error('Failed to fetch videos');
           }
-          let data = await response.json();
-          let items = data.items || [];
-          
-          // If no videos are found and the language is not English, fall back to English
-          if (items.length === 0 && language !== 'English') {
-            query = `Khan Academy ${lessonPlan.title}`;
-            response = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
-            if (!response.ok) {
-              throw new Error('Failed to fetch videos');
-            }
-            data = await response.json();
-            items = data.items || [];
-          }
-
-          setVideos(items);
+          const data = await response.json();
+          setVideos(data.items || []);
         } catch (error) {
           console.error('Error fetching videos:', error);
           toast({
@@ -81,7 +67,7 @@ export function PersonalisedTutor() {
       };
       fetchVideos();
     }
-  }, [lessonPlan, language, toast]);
+  }, [lessonPlan, toast]);
 
   const handleGeneratePlan = async (e: FormEvent) => {
     e.preventDefault();
