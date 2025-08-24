@@ -63,6 +63,7 @@ export function Dashboard() {
 
   const earnedBadges = allBadges.filter(b => b.earned);
   const unearnedBadges = allBadges.filter(b => !b.earned);
+  const roundedProgress = Math.round(overallProgress);
 
   return (
     <div className="space-y-8">
@@ -78,7 +79,11 @@ export function Dashboard() {
                 <CardTitle>Overall Progress</CardTitle>
                 <CardDescription>Your average score across all sessions.</CardDescription>
             </CardHeader>
-            <CardContent className="flex items-center justify-center">
+            <CardContent className="flex items-center justify-center relative">
+                <div className="absolute flex flex-col items-center justify-center">
+                    <span className="text-4xl font-bold text-foreground">{roundedProgress}%</span>
+                    <span className="text-sm text-muted-foreground">Complete</span>
+                </div>
                 <ChartContainer
                     config={chartConfig}
                     className="mx-auto aspect-square h-[250px]"
@@ -92,18 +97,19 @@ export function Dashboard() {
                             data={overallProgressData}
                             dataKey="value"
                             nameKey="name"
-                            innerRadius={60}
+                            innerRadius={80}
+                            outerRadius={100}
                             strokeWidth={5}
+                            startAngle={90}
+                            endAngle={450}
                         >
                              <Cell
                                 key="completed"
                                 fill="var(--color-completed)"
-                                radius={[4, 4, 0, 0]}
                               />
                               <Cell
                                 key="remaining"
                                 fill="var(--color-remaining)"
-                                radius={[0, 0, 4, 4]}
                               />
                         </Pie>
                     </PieChart>
@@ -111,7 +117,7 @@ export function Dashboard() {
             </CardContent>
              <CardFooter className="flex-col gap-2 text-sm">
                 <div className="flex items-center gap-2 font-medium leading-none">
-                    You're at {Math.round(overallProgress)}% overall. Keep it up!
+                    You're at {roundedProgress}% overall. Keep it up!
                     <TrendingUp className="h-4 w-4" />
                 </div>
             </CardFooter>

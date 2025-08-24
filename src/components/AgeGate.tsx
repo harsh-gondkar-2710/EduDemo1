@@ -30,7 +30,7 @@ export function AgeGate() {
     <Dialog open={isAgeGateOpen} onOpenChange={setAgeGateOpen}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Welcome to AdaptiLearn!</DialogTitle>
+          <DialogTitle>Welcome to EduSmart!</DialogTitle>
           <DialogDescription>
             To personalize your learning experience, please enter your age.
           </DialogDescription>

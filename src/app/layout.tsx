@@ -7,7 +7,7 @@ import { Providers } from '@/components/Providers';
 import { Sidebar } from '@/components/ui/sidebar';
 
 export const metadata: Metadata = {
-  title: 'AdaptiLearn',
+  title: 'EduSmart',
   description: 'An AI-powered adaptive learning platform.',
 };
 
