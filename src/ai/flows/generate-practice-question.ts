@@ -18,7 +18,7 @@ const GeneratePracticeQuestionInputSchema = z.object({
     .min(1)
     .max(10)
     .describe('The difficulty level of the question (1-10).'),
-  age: z.number().optional().describe("The student's age, to tailor the question appropriately."),
+  age: z.number().nullable().optional().describe("The student's age, to tailor the question appropriately."),
   previousQuestions: z
     .array(z.string())
     .optional()

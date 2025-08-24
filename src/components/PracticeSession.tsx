@@ -54,7 +54,7 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
             subject, 
             difficulty: newDifficulty,
             previousQuestions: prevQuestions,
-            age,
+            ...(age && { age }),
         });
         setCurrentQuestion(question);
         setAskedQuestions(prev => [...prev, question.questionText]);
