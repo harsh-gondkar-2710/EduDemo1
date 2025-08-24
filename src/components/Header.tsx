@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BrainCircuit, Bot, Target, Languages, PenSquare, ScanSearch, PencilRuler, Map, Goal, LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { BrainCircuit, Bot, Target, Languages, PenSquare, ScanSearch, PencilRuler, Map, Goal, LogIn, LogOut, Award } from 'lucide-react';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, useSidebar, SidebarFooter } from '@/components/ui/sidebar';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/hooks/use-auth';
@@ -17,7 +17,7 @@ export function Header() {
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: Target },
-    { href: '/tutor', label: 'AI Tutor', icon: Bot },
+    { href: '/tutor', label: 'Personalised Tutor', icon: Bot },
     { href: '/solver', label: 'Solver', icon: ScanSearch },
     { href: '/language', label: 'Language', icon: Languages },
     { href: '/essay-grading', label: 'Essay Grading', icon: PenSquare },
@@ -25,10 +25,6 @@ export function Header() {
     { href: '/career', label: 'Career Mapper', icon: Map },
     { href: '/goals', label: 'Study Goals', icon: Goal },
   ];
-
-  const userMenuItems = [
-    { href: '/profile', label: 'Profile', icon: UserIcon },
-  ]
 
   return (
     <>
@@ -63,20 +59,6 @@ export function Header() {
       <SidebarFooter>
         <Separator className="my-2" />
         <SidebarMenu>
-            {user && userMenuItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                <Link href={item.href} className='w-full'>
-                    <SidebarMenuButton
-                        isActive={pathname === item.href}
-                        tooltip={item.label}
-                        className="justify-start"
-                    >
-                        <item.icon />
-                        <span className={`${state === 'collapsed' && 'md:hidden'}`}>{item.label}</span>
-                    </SidebarMenuButton>
-                </Link>
-                </SidebarMenuItem>
-            ))}
             <SidebarMenuItem>
                 {user ? (
                     <SidebarMenuButton onClick={logout} tooltip="Logout" className="justify-start w-full">

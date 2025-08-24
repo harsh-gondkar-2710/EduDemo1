@@ -42,7 +42,7 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
-  const { addSessionData, age } = usePerformance();
+  const { addSessionData } = usePerformance();
   
   const startNewQuestion = async (newDifficulty: number, prevQuestions: string[]) => {
     if (!subject) return;
@@ -54,7 +54,6 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
             subject, 
             difficulty: newDifficulty,
             previousQuestions: prevQuestions,
-            ...(age && { age }),
         });
         setCurrentQuestion(question);
         setAskedQuestions(prev => [...prev, question.questionText]);

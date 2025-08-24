@@ -29,7 +29,6 @@ interface AuthContextType {
   signUpWithEmail: (email: string, pass: string, displayName: string) => Promise<any>;
   signInWithGoogle: () => Promise<any>;
   logout: () => Promise<any>;
-  updateUserProfile: (profile: { displayName?: string; photoURL?: string; }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -69,24 +68,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   
   const logout = () => {
     return signOut(auth).then(() => {
-      // Clear user-specific data on logout
-      localStorage.removeItem('progressData');
-      localStorage.removeItem('userAge');
-      localStorage.removeItem('studyGoals');
       router.push('/login');
     });
   };
-  
-  const updateUserProfile = async (profile: { displayName?: string; photoURL?: string; }) => {
-    if (auth.currentUser) {
-      await updateProfile(auth.currentUser, profile);
-      // Create a new user object to trigger re-renders in components
-      setUser(prevUser => prevUser ? { ...prevUser, ...profile } : null);
-    } else {
-        throw new Error("No user is currently signed in.");
-    }
-  }
-
 
   const value = {
     user,
@@ -95,7 +79,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     signUpWithEmail,
     signInWithGoogle,
     logout,
-    updateUserProfile,
   };
 
   return (
