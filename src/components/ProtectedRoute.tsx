@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,7 +10,13 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  if (loading) {
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [loading, user, router]);
+
+  if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="space-y-4 w-1/2">
@@ -20,11 +26,6 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
         </div>
       </div>
     );
-  }
-
-  if (!user) {
-    router.push('/login');
-    return null; // Render nothing while redirecting
   }
 
   return <>{children}</>;
