@@ -1,10 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, type FormEvent } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle2, XCircle, Lightbulb, ArrowLeft } from 'lucide-react';
@@ -13,6 +12,7 @@ import { adjustDifficulty } from '@/ai/flows/dynamically-adjust-difficulty';
 import { generatePracticeQuestion, type PracticeQuestion } from '@/ai/flows/generate-practice-question';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePerformance } from '@/hooks/use-performance';
+import { cn } from '@/lib/utils';
 
 const TOTAL_QUESTIONS = 10;
 
@@ -31,7 +31,7 @@ interface PracticeSessionProps {
 export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
   const [difficulty, setDifficulty] = useState(3);
   const [currentQuestion, setCurrentQuestion] = useState<PracticeQuestion | null>(null);
-  const [userAnswer, setUserAnswer] = useState('');
+  const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<{ type: 'correct' | 'incorrect'; message: string } | null>(null);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
@@ -48,7 +48,7 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
     if (!subject) return;
     setIsLoading(true);
     setFeedback(null);
-    setUserAnswer('');
+    setSelectedAnswers([]);
     try {
         const question = await generatePracticeQuestion({ 
             subject, 
@@ -122,12 +122,31 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
       setIsLoading(false);
     }
   };
+  
+  const handleAnswerSelect = (option: string) => {
+    if (feedback) return;
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (feedback || !currentQuestion || !subject) return;
+    setSelectedAnswers(prev => {
+        if (!currentQuestion) return [];
+        const isMultiSelect = currentQuestion.correctAnswers.length > 1;
+        if(isMultiSelect) {
+            if(prev.includes(option)) {
+                return prev.filter(ans => ans !== option);
+            } else {
+                return [...prev, option];
+            }
+        } else {
+            return [option];
+        }
+    });
+  }
 
-    const isCorrect = userAnswer.trim().toLowerCase() === String(currentQuestion.answer).trim().toLowerCase();
+  const handleSubmit = () => {
+    if (feedback || !currentQuestion || !subject || selectedAnswers.length === 0) return;
+
+    const sortedSelected = [...selectedAnswers].sort();
+    const sortedCorrect = [...currentQuestion.correctAnswers].sort();
+    const isCorrect = JSON.stringify(sortedSelected) === JSON.stringify(sortedCorrect);
 
     const timeTaken = (Date.now() - startTime) / 1000;
     setPerformanceHistory(prev => [
@@ -141,10 +160,22 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
     } else {
       setFeedback({
         type: 'incorrect',
-        message: `Not quite. The correct answer is ${currentQuestion.answer}.`,
+        message: `Not quite. The correct answer is: ${currentQuestion.correctAnswers.join(', ')}.`,
       });
     }
   };
+  
+  const getButtonVariant = (option: string) => {
+    if (!feedback) return selectedAnswers.includes(option) ? 'default' : 'outline';
+    
+    const isCorrect = currentQuestion?.correctAnswers.includes(option);
+    const isSelected = selectedAnswers.includes(option);
+
+    if (isCorrect) return 'default';
+    if (isSelected && !isCorrect) return 'destructive';
+    return 'outline';
+  }
+
 
   if (isSessionOver) {
     return (
@@ -183,31 +214,36 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
         </div>
         <Progress value={progressPercentage} className="w-full mt-2" />
       </CardHeader>
-      <CardContent className="space-y-6 min-h-[250px]">
+      <CardContent className="space-y-6 min-h-[350px]">
         {isLoading || !currentQuestion ? (
           <div className="space-y-4 text-center pt-8">
-            <Skeleton className="h-12 w-3/4 mx-auto" />
-            <Skeleton className="h-10 w-1/2 mx-auto" />
+            <Skeleton className="h-8 w-3/4 mx-auto" />
+            <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+            </div>
           </div>
         ) : (
           <>
-            <div className="text-center pt-8">
-              <p className="text-2xl font-semibold">{currentQuestion.questionText}</p>
+            <div className="text-center pt-4">
+              <p className="text-xl font-semibold">{currentQuestion.questionText}</p>
+              {currentQuestion.correctAnswers.length > 1 && <p className="text-sm text-muted-foreground">(Select all that apply)</p>}
             </div>
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <Input
-                type="text"
-                value={userAnswer}
-                onChange={(e) => setUserAnswer(e.target.value)}
-                placeholder="Your answer"
-                className="text-lg"
-                disabled={!!feedback}
-                required
-              />
-              <Button type="submit" disabled={!!feedback}>
-                Submit
-              </Button>
-            </form>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {currentQuestion.options.map((option, index) => (
+                    <Button
+                        key={index}
+                        variant={getButtonVariant(option)}
+                        className="h-auto py-3 justify-start text-left whitespace-normal"
+                        onClick={() => handleAnswerSelect(option)}
+                        disabled={!!feedback}
+                    >
+                       {option}
+                    </Button>
+                ))}
+            </div>
             {feedback && (
               <Alert variant={feedback.type === 'correct' ? 'default' : 'destructive'}>
                 {feedback.type === 'correct' ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
@@ -216,12 +252,10 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
                 </AlertTitle>
                 <AlertDescription>
                   {feedback.message}
-                  {feedback.type === 'incorrect' && (
-                    <div className="mt-2 flex items-center gap-2 text-sm">
-                      <Lightbulb className="h-4 w-4 text-accent" />
-                      <span>Keep trying! Every mistake is a learning opportunity.</span>
+                  <div className="mt-2 flex items-start gap-2 text-sm">
+                      <Lightbulb className="h-4 w-4 text-accent shrink-0 mt-1" />
+                      <span><strong>Explanation:</strong> {currentQuestion.explanation}</span>
                     </div>
-                  )}
                 </AlertDescription>
               </Alert>
             )}
@@ -229,14 +263,24 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
         )}
       </CardContent>
       <CardFooter>
-        <Button
-          onClick={handleNextQuestion}
-          className="w-full"
-          disabled={!feedback || isLoading}
-          variant="secondary"
-        >
-          {isLoading ? "Generating Question..." : "Next Question"}
-        </Button>
+        {!feedback ? (
+            <Button
+                onClick={handleSubmit}
+                className="w-full"
+                disabled={selectedAnswers.length === 0 || isLoading}
+            >
+                Submit
+            </Button>
+        ) : (
+            <Button
+                onClick={handleNextQuestion}
+                className="w-full"
+                disabled={isLoading}
+                variant="secondary"
+            >
+                {isLoading ? "Generating Question..." : "Next Question"}
+            </Button>
+        )}
       </CardFooter>
     </Card>
   );

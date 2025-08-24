@@ -7,7 +7,7 @@ import { SidebarInset } from '@/components/ui/sidebar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-const subjects = ['Maths', 'Physics', 'Chemistry', 'Biology', 'Indian History', 'Social Studies', 'GK'];
+const subjects = ['General', 'Maths', 'Physics', 'Chemistry', 'Biology', 'Indian History', 'Social Studies', 'GK'];
 
 export default function PracticePage() {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
