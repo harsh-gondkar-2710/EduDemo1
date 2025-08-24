@@ -46,13 +46,17 @@ const adjustDifficultyPrompt = ai.definePrompt({
   name: 'adjustDifficultyPrompt',
   input: {schema: AdjustDifficultyInputSchema},
   output: {schema: AdjustDifficultyOutputSchema},
-  prompt: `You are an AI tutor specializing in math education. Your task is to dynamically adjust the difficulty of math questions for a student based on their performance data.
+  prompt: `You are an AI tutor specializing in creating adaptive learning paths. Your task is to dynamically adjust the difficulty of questions for a student based on their recent performance data.
 
   Student ID: {{{studentId}}}
   Current Difficulty Level: {{{currentDifficulty}}}
-  Performance Data: {{{performanceData}}}
+  Recent Performance Data: {{{performanceData}}}
 
-  Analyze the student's performance data and determine whether to increase, decrease, or maintain the difficulty level. Provide a new difficulty level (1-10) and explain your reasoning. Consider factors such as the number of correct/incorrect answers, time spent on each question, and any specific topics where the student is struggling.
+  Analyze the student's performance data and determine whether to increase, decrease, or maintain the difficulty level. Provide a new difficulty level (an integer between 1 and 10).
+  
+  Your reasoning should be concise and encouraging. For example, if the student is doing well, you might say "You're doing great, let's try something a bit more challenging!". If they are struggling, you could say "Let's take a step back and solidify the basics."
+
+  Consider factors such as the number of correct/incorrect answers and the time spent on each question. A higher proportion of correct answers suggests an increase in difficulty, while a high number of incorrect answers suggests a decrease.
   `,
 });
 
@@ -72,6 +76,8 @@ const adjustDifficultyFlow = ai.defineFlow(
       );
     }
     const {output} = await adjustDifficultyPrompt(input);
-    return output!;
+    // Clamp the difficulty to be between 1 and 10.
+    const newDifficulty = Math.max(1, Math.min(10, output!.newDifficulty));
+    return { ...output!, newDifficulty };
   }
 );

@@ -36,6 +36,7 @@ export function PracticeSession() {
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [isSessionOver, setIsSessionOver] = useState(false);
   const [performanceHistory, setPerformanceHistory] = useState<PerformanceRecord[]>([]);
+  const [askedQuestions, setAskedQuestions] = useState<string[]>([]);
   const [startTime, setStartTime] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,14 +44,19 @@ export function PracticeSession() {
   const { addSessionData } = usePerformance();
   const router = useRouter();
   
-  const startNewQuestion = async (newDifficulty: number) => {
+  const startNewQuestion = async (newDifficulty: number, prevQuestions: string[]) => {
     if (!subject) return;
     setIsLoading(true);
     setFeedback(null);
     setUserAnswer('');
     try {
-        const question = await generatePracticeQuestion({ subject, difficulty: newDifficulty });
+        const question = await generatePracticeQuestion({ 
+            subject, 
+            difficulty: newDifficulty,
+            previousQuestions: prevQuestions,
+        });
         setCurrentQuestion(question);
+        setAskedQuestions(prev => [...prev, question.questionText]);
         setStartTime(Date.now());
     } catch (error) {
         console.error("Failed to generate question", error);
@@ -66,7 +72,7 @@ export function PracticeSession() {
 
   useEffect(() => {
     if (subject) {
-      startNewQuestion(difficulty);
+      startNewQuestion(difficulty, []);
     }
   }, [subject]);
 
@@ -98,10 +104,10 @@ export function PracticeSession() {
         performanceData: JSON.stringify(performanceHistory.slice(-5)),
       });
       setDifficulty(response.newDifficulty);
-      await startNewQuestion(response.newDifficulty);
+      await startNewQuestion(response.newDifficulty, askedQuestions);
       toast({
         title: "Difficulty Adjusted!",
-        description: `New level: ${response.newDifficulty}. ${response.reasoning}`,
+        description: `${response.reasoning}`,
       });
     } catch (error) {
       console.error('Error adjusting difficulty:', error);
@@ -110,7 +116,7 @@ export function PracticeSession() {
         title: 'AI Error',
         description: 'Could not adjust difficulty. Continuing at current level.',
       });
-      await startNewQuestion(difficulty);
+      await startNewQuestion(difficulty, askedQuestions);
     } finally {
       setIsLoading(false);
     }
