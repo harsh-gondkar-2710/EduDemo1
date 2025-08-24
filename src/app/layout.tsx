@@ -1,10 +1,9 @@
 
 import type { Metadata } from 'next';
 import './globals.css';
-import { Header } from '@/components/Header';
 import { Toaster } from '@/components/ui/toaster';
 import { Providers } from '@/components/Providers';
-import { Sidebar } from '@/components/ui/sidebar';
+import { AppLayout } from '@/components/AppLayout';
 
 export const metadata: Metadata = {
   title: 'EduSmart',
@@ -32,17 +31,9 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <Providers>
-            <div className="relative flex min-h-screen">
-              <Sidebar side="left" collapsible="icon" className="border-r hidden md:flex">
-                  <Header />
-              </Sidebar>
-              <main className="flex-1 flex flex-col">
-                <div className='md:hidden'>
-                  <Header/>
-                </div>
+            <AppLayout>
                 {children}
-              </main>
-            </div>
+            </AppLayout>
             <Toaster />
         </Providers>
       </body>
