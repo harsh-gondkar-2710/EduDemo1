@@ -10,8 +10,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 type TutorView = 'lesson' | 'video' | 'practice';
+const subjects = ['General', 'Maths', 'Physics', 'Chemistry', 'Biology', 'History', 'Social Studies', 'GK'];
+const languages = ['English', 'Marathi', 'Hindi'];
 
 export function AITutor() {
   const [topic, setTopic] = useState('');
@@ -21,6 +25,8 @@ export function AITutor() {
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; explanation: string } | null>(null);
   const [tutorView, setTutorView] = useState<TutorView>('lesson');
+  const [selectedSubject, setSelectedSubject] = useState('General');
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
   const { toast } = useToast();
 
   const handleGeneratePlan = async (e: FormEvent) => {
@@ -35,7 +41,8 @@ export function AITutor() {
     setTutorView('lesson');
 
     try {
-      const result = await generateLessonPlan({ topic });
+      const fullTopic = selectedSubject === 'General' ? topic : `${topic} (in the context of ${selectedSubject})`;
+      const result = await generateLessonPlan({ topic: fullTopic, language: selectedLanguage });
       setLessonPlan(result);
     } catch (error) {
       console.error('Failed to generate lesson plan:', error);
@@ -88,23 +95,51 @@ export function AITutor() {
       </div>
       
       <Card>
-        <CardHeader>
-          <CardTitle>What would you like to learn?</CardTitle>
-        </CardHeader>
         <form onSubmit={handleGeneratePlan}>
-          <CardContent>
-            <Input
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g., 'Pythagorean Theorem', 'The French Revolution', 'How Photosynthesis Works'"
-              disabled={isLoading}
-            />
-          </CardContent>
-          <CardFooter>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Generating Lesson...' : 'Generate Lesson'}
-            </Button>
-          </CardFooter>
+            <CardHeader>
+                <CardTitle>What would you like to learn?</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="subject-select">Subject</Label>
+                        <Select onValueChange={setSelectedSubject} defaultValue={selectedSubject} disabled={isLoading}>
+                            <SelectTrigger id="subject-select">
+                                <SelectValue placeholder="Select a subject" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {subjects.map(subject => <SelectItem key={subject} value={subject}>{subject}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                         <Label htmlFor="language-select">Language</Label>
+                        <Select onValueChange={setSelectedLanguage} defaultValue={selectedLanguage} disabled={isLoading}>
+                            <SelectTrigger id="language-select">
+                                <SelectValue placeholder="Select a language" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {languages.map(lang => <SelectItem key={lang} value={lang}>{lang}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="topic-input">Topic</Label>
+                    <Input
+                    id="topic-input"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    placeholder="e.g., 'Pythagorean Theorem', 'The French Revolution'"
+                    disabled={isLoading}
+                    />
+                </div>
+            </CardContent>
+            <CardFooter>
+                <Button type="submit" disabled={isLoading || !topic}>
+                {isLoading ? 'Generating Lesson...' : 'Generate Lesson'}
+                </Button>
+            </CardFooter>
         </form>
       </Card>
 
@@ -134,9 +169,13 @@ export function AITutor() {
                 <CardContent className="prose dark:prose-invert max-w-none">
                     <p>{lessonPlan.introduction}</p>
                     <h3 className="text-lg font-semibold mt-4">Key Concepts</h3>
-                    <ul className="list-disc pl-5">
+                    <ul className="list-disc pl-5 space-y-2">
                       {lessonPlan.keyConcepts.map((item, index) => (
-                        <li key={index}>{item as any}</li>
+                        <li key={index}>
+                            <strong>{item.concept}:</strong> {item.explanation}
+                            <br />
+                            <em className="text-sm">Example: {item.example}</em>
+                        </li>
                       ))}
                     </ul>
                     <h3 className="text-lg font-semibold mt-4">Example</h3>
@@ -144,39 +183,6 @@ export function AITutor() {
                     <p><strong>Solution:</strong> {lessonPlan.example.solution}</p>
                 </CardContent>
                 <CardFooter className="gap-4">
-                    <Button onClick={() => setTutorView('video')}>
-                        <Youtube className="mr-2" />
-                        Watch an Explanation Video
-                    </Button>
-                    <Button onClick={resetPractice} variant="secondary">
-                       <BrainCircuit className="mr-2" />
-                        Practice
-                    </Button>
-                </CardFooter>
-            </Card>
-          )}
-
-          {tutorView === 'video' && (
-             <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Youtube className="text-red-600" />
-                        Explanation Video
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="aspect-video">
-                        <iframe
-                            className="w-full h-full rounded-lg"
-                            src={`https://www.youtube.com/embed/${lessonPlan.youtubeVideoId}`}
-                            title="YouTube video player"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                        ></iframe>
-                    </div>
-                </CardContent>
-                <CardFooter className='gap-4'>
-                    <Button onClick={() => setTutorView('lesson')} variant="outline">Back to Lesson</Button>
                     <Button onClick={resetPractice} variant="secondary">
                        <BrainCircuit className="mr-2" />
                         Practice
