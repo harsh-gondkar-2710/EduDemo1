@@ -240,7 +240,8 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
                         onClick={() => handleAnswerSelect(option)}
                         disabled={!!feedback}
                     >
-                       {option}
+                       <span className="font-bold mr-2">{String.fromCharCode(65 + index)}.</span>
+                       <span>{option}</span>
                     </Button>
                 ))}
             </div>
