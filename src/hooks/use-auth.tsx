@@ -26,7 +26,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signInWithEmail: (email: string, pass: string) => Promise<any>;
-  signUpWithEmail: (email: string, pass: string, displayName: string) => Promise<any>;
+  signUpWithEmail: (email: string, pass: string, displayName: string, age: number) => Promise<any>;
   signInWithGoogle: () => Promise<any>;
   logout: () => Promise<any>;
 }
@@ -51,11 +51,13 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     return signInWithEmailAndPassword(auth, email, pass);
   };
   
-  const signUpWithEmail = async (email: string, pass: string, displayName: string) => {
+  const signUpWithEmail = async (email: string, pass: string, displayName: string, age: number) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
     if (userCredential.user) {
       await updateProfile(userCredential.user, { displayName });
-      // Manually update the user state because onAuthStateChanged might not fire immediately
+      // This is a workaround for storing extra data without a database.
+      // In a real app, you'd use Firestore or another DB.
+      localStorage.setItem(`user_age_${userCredential.user.uid}`, String(age));
       setUser({ ...userCredential.user, displayName });
     }
     return userCredential;
@@ -68,6 +70,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   
   const logout = () => {
     return signOut(auth).then(() => {
+      // Clear user-specific data on logout
+      if (user) {
+        localStorage.removeItem(`studyGoals_${user.uid}`);
+        localStorage.removeItem(`performanceData_${user.uid}`);
+        localStorage.removeItem(`user_age_${user.uid}`);
+      }
       router.push('/login');
     });
   };

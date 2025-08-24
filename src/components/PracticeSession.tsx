@@ -12,7 +12,6 @@ import { adjustDifficulty } from '@/ai/flows/dynamically-adjust-difficulty';
 import { generatePracticeQuestion, type PracticeQuestion } from '@/ai/flows/generate-practice-question';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePerformance } from '@/hooks/use-performance';
-import { cn } from '@/lib/utils';
 
 const TOTAL_QUESTIONS = 10;
 
@@ -25,10 +24,11 @@ type PerformanceRecord = {
 
 interface PracticeSessionProps {
     subject: string;
+    age: number | null;
     onBack: () => void;
 }
 
-export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
+export function PracticeSession({ subject, age, onBack }: PracticeSessionProps) {
   const [difficulty, setDifficulty] = useState(3);
   const [currentQuestion, setCurrentQuestion] = useState<PracticeQuestion | null>(null);
   const [selectedAnswerIndices, setSelectedAnswerIndices] = useState<number[]>([]);
@@ -54,6 +54,7 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
             subject, 
             difficulty: newDifficulty,
             previousQuestions: prevQuestions,
+            age: age,
         });
         setCurrentQuestion(question);
         setAskedQuestions(prev => [...prev, question.questionText]);

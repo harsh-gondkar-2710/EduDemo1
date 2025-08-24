@@ -22,6 +22,7 @@ export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [age, setAge] = useState<number | undefined>();
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -49,16 +50,16 @@ export function Login() {
       } else if (action === 'signIn') {
         await signInWithEmail(email, password);
       } else {
-        if (!username) {
+        if (!username || !age) {
             toast({
                 variant: 'destructive',
-                title: 'Username Required',
-                description: 'Please enter a username to sign up.',
+                title: 'Missing Information',
+                description: 'Please enter a username and age to sign up.',
             });
             setLoading(false);
             return;
         }
-        await signUpWithEmail(email, password, username);
+        await signUpWithEmail(email, password, username, age);
       }
       toast({
         title: 'Success!',
@@ -78,124 +79,133 @@ export function Login() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center pr-16">
-        <Tabs defaultValue="login" className="w-full max-w-sm">
-        <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-        </TabsList>
-        <TabsContent value="login">
-            <Card>
-            <CardHeader>
-                <CardTitle>Welcome Back!</CardTitle>
-                <CardDescription>
-                Sign in to your EduSmart account to continue your learning journey.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="space-y-2">
-                <Label htmlFor="email-login">Email</Label>
+      <Tabs defaultValue="login" className="w-full max-w-sm">
+      <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="login">Login</TabsTrigger>
+          <TabsTrigger value="signup">Sign Up</TabsTrigger>
+      </TabsList>
+      <TabsContent value="login">
+          <Card>
+          <CardHeader>
+              <CardTitle>Welcome Back!</CardTitle>
+              <CardDescription>
+              Sign in to your EduSmart account to continue your learning journey.
+              </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+              <div className="space-y-2">
+              <Label htmlFor="email-login">Email</Label>
+              <Input
+                  id="email-login"
+                  type="email"
+                  placeholder="m@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+              />
+              </div>
+              <div className="space-y-2">
+              <Label htmlFor="password-login">Password</Label>
+              <Input
+                  id="password-login"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+              />
+              </div>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4">
+              <Button
+              className="w-full"
+              onClick={() => handleAuthAction('signIn')}
+              disabled={loading}
+              >
+              {loading ? 'Signing In...' : 'Sign In'}
+              </Button>
+              <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => handleAuthAction('signIn', 'google')}
+              disabled={loading}
+              >
+              Sign In with Google
+              </Button>
+          </CardFooter>
+          </Card>
+      </TabsContent>
+      <TabsContent value="signup">
+          <Card>
+          <CardHeader>
+              <CardTitle>Create an Account</CardTitle>
+              <CardDescription>
+              Join EduSmart to start your personalized learning adventure.
+              </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+              <div className="space-y-2">
+              <Label htmlFor="username-signup">Username</Label>
+              <Input
+                  id="username-signup"
+                  type="text"
+                  placeholder="your_username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={loading}
+              />
+              </div>
+               <div className="space-y-2">
+                <Label htmlFor="age-signup">Age</Label>
                 <Input
-                    id="email-login"
-                    type="email"
-                    placeholder="m@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="age-signup"
+                    type="number"
+                    placeholder="your_age"
+                    value={age || ''}
+                    onChange={(e) => setAge(parseInt(e.target.value, 10))}
                     disabled={loading}
                 />
                 </div>
-                <div className="space-y-2">
-                <Label htmlFor="password-login">Password</Label>
-                <Input
-                    id="password-login"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={loading}
-                />
-                </div>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-                <Button
-                className="w-full"
-                onClick={() => handleAuthAction('signIn')}
-                disabled={loading}
-                >
-                {loading ? 'Signing In...' : 'Sign In'}
-                </Button>
-                <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => handleAuthAction('signIn', 'google')}
-                disabled={loading}
-                >
-                Sign In with Google
-                </Button>
-            </CardFooter>
-            </Card>
-        </TabsContent>
-        <TabsContent value="signup">
-            <Card>
-            <CardHeader>
-                <CardTitle>Create an Account</CardTitle>
-                <CardDescription>
-                Join EduSmart to start your personalized learning adventure.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="space-y-2">
-                <Label htmlFor="username-signup">Username</Label>
-                <Input
-                    id="username-signup"
-                    type="text"
-                    placeholder="your_username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    disabled={loading}
-                />
-                </div>
-                <div className="space-y-2">
-                <Label htmlFor="email-signup">Email</Label>
-                <Input
-                    id="email-signup"
-                    type="email"
-                    placeholder="m@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={loading}
-                />
-                </div>
-                <div className="space-y-2">
-                <Label htmlFor="password-signup">Password</Label>
-                <Input
-                    id="password-signup"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={loading}
-                />
-                </div>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-                <Button
-                className="w-full"
-                onClick={() => handleAuthAction('signUp')}
-                disabled={loading}
-                >
-                {loading ? 'Signing Up...' : 'Sign Up'}
-                </Button>
-                <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => handleAuthAction('signIn', 'google')}
-                disabled={loading}
-                >
-                Sign Up with Google
-                </Button>
-            </CardFooter>
-            </Card>
-        </TabsContent>
-        </Tabs>
-    </div>
+              <div className="space-y-2">
+              <Label htmlFor="email-signup">Email</Label>
+              <Input
+                  id="email-signup"
+                  type="email"
+                  placeholder="m@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+              />
+              </div>
+              <div className="space-y-2">
+              <Label htmlFor="password-signup">Password</Label>
+              <Input
+                  id="password-signup"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+              />
+              </div>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4">
+              <Button
+              className="w-full"
+              onClick={() => handleAuthAction('signUp')}
+              disabled={loading}
+              >
+              {loading ? 'Signing Up...' : 'Sign Up'}
+              </Button>
+              <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => handleAuthAction('signIn', 'google')}
+              disabled={loading}
+              >
+              Sign Up with Google
+              </Button>
+          </CardFooter>
+          </Card>
+      </TabsContent>
+      </Tabs>
   );
 }

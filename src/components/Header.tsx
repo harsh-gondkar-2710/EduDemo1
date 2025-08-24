@@ -3,27 +3,27 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BrainCircuit, Bot, Target, Languages, PenSquare, ScanSearch, PencilRuler, Map, Goal, LogIn, LogOut, Award } from 'lucide-react';
+import { BrainCircuit, Bot, Target, Languages, PenSquare, ScanSearch, PencilRuler, Map, Goal, LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, useSidebar, SidebarFooter } from '@/components/ui/sidebar';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/hooks/use-auth';
-import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 
 export function Header() {
   const pathname = usePathname();
   const { state } = useSidebar();
-  const { user, logout, loading } = useAuth();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: Target },
-    { href: '/tutor', label: 'Personalised Tutor', icon: Bot },
+    { href: '/tutor', label: 'AI Tutor', icon: Bot },
     { href: '/solver', label: 'Solver', icon: ScanSearch },
     { href: '/language', label: 'Language', icon: Languages },
     { href: '/essay-grading', label: 'Essay Grading', icon: PenSquare },
     { href: '/practice', label: 'Practice', icon: PencilRuler },
     { href: '/career', label: 'Career Mapper', icon: Map },
     { href: '/goals', label: 'Study Goals', icon: Goal },
+    { href: '/profile', label: 'Profile', icon: UserIcon },
   ];
 
   return (

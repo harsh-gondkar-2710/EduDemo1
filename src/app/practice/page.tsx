@@ -7,6 +7,9 @@ import { SidebarInset } from '@/components/ui/sidebar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/hooks/use-auth';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 const subjects = ['Random', 'Maths', 'Physics', 'Chemistry', 'Biology', 'Indian History', 'Social Studies', 'GK', 'Other'];
 
@@ -14,6 +17,16 @@ export default function PracticePage() {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [showOtherInput, setShowOtherInput] = useState(false);
   const [otherTopic, setOtherTopic] = useState('');
+  const [age, setAge] = useState<number | null>(null);
+  const [showAgeDialog, setShowAgeDialog] = useState(true);
+  const { user } = useAuth();
+  
+  const handleAgeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (age && age > 0) {
+      setShowAgeDialog(false);
+    }
+  };
 
   const handleSubjectClick = (subject: string) => {
     if (subject === 'Other') {
@@ -29,6 +42,40 @@ export default function PracticePage() {
       setSelectedSubject(otherTopic.trim());
     }
   };
+
+  if (user && !age && showAgeDialog) {
+    return (
+      <Dialog open={showAgeDialog} onOpenChange={setShowAgeDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <form onSubmit={handleAgeSubmit}>
+            <DialogHeader>
+              <DialogTitle>What is your age?</DialogTitle>
+              <DialogDescription>
+                This helps us tailor questions to the appropriate level.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="age" className="text-right">
+                  Age
+                </Label>
+                <Input
+                  id="age"
+                  type="number"
+                  value={age || ''}
+                  onChange={(e) => setAge(parseInt(e.target.value, 10))}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={!age || age <= 0}>Save</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   if (!selectedSubject) {
     return (
@@ -90,6 +137,7 @@ export default function PracticePage() {
       <div className="container mx-auto px-4 py-8 md:px-6">
         <PracticeSession
           subject={selectedSubject}
+          age={age}
           onBack={() => setSelectedSubject(null)}
         />
       </div>
