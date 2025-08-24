@@ -62,6 +62,8 @@ const lessonPlanPrompt = ai.definePrompt({
   4.  One clear, step-by-step example problem and its solution.
   5.  Two or three practice problems for the student to solve, along with their answers.
 
+  Do NOT find or include any YouTube videos. This is handled by a separate process.
+
   Keep the language simple and encouraging. The goal is to make the topic understandable for a beginner.
   `,
 });
