@@ -37,7 +37,7 @@ export function AITutor() {
     try {
       const result = await generateLessonPlan({ topic });
       setLessonPlan(result);
-    } catch (error)
+    } catch (error) {
       console.error('Failed to generate lesson plan:', error);
       toast({
         variant: 'destructive',
