@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -10,6 +11,7 @@ import { generatePersonalizedRecommendations } from '@/ai/flows/generate-persona
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePerformance } from '@/hooks/use-performance';
+import { AgeGate } from './AgeGate';
 
 const chartConfig: ChartConfig = {
   score: { label: 'Score', color: 'hsl(var(--primary))' },
@@ -65,6 +67,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-8">
+      <AgeGate />
       <div className="text-center">
         <h1 className="text-4xl font-bold">Welcome back, Alex!</h1>
         <p className="text-muted-foreground mt-2">Here's a summary of your progress. Keep up the great work!</p>

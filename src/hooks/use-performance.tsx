@@ -9,6 +9,7 @@ import {
   FC,
   useCallback,
   useMemo,
+  useEffect,
 } from 'react';
 
 type PerformanceRecord = {
@@ -39,6 +40,10 @@ interface PerformanceContextType {
   overallProgress: number;
   strengths: string[];
   weaknesses: string[];
+  age: number | null;
+  setAge: (age: number) => void;
+  isAgeGateOpen: boolean;
+  setAgeGateOpen: (isOpen: boolean) => void;
   addSessionData: (sessionData: SessionData) => void;
 }
 
@@ -55,16 +60,33 @@ const initialProgressData: ProgressData[] = [
 ];
   
 const initialTopicPerformanceData: TopicPerformanceData[] = [
-    { topic: 'Maths', strength: 95 },
-    { topic: 'Indian History', strength: 80 },
-    { topic: 'Social Studies', strength: 75 },
+    { topic: 'Basic Maths', strength: 95 },
+    { topic: 'Physics', strength: 80 },
+    { topic: 'Chemistry', strength: 75 },
     { topic: 'GK', strength: 70 },
-    { topic: 'Sciences', strength: 60 },
+    { topic: 'Biology', strength: 60 },
 ];
 
 export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [progressData, setProgressData] = useState<ProgressData[]>(initialProgressData);
   const [topicPerformanceData, setTopicPerformanceData] = useState<TopicPerformanceData[]>(initialTopicPerformanceData);
+  const [age, setAgeState] = useState<number | null>(null);
+  const [isAgeGateOpen, setAgeGateOpen] = useState(false);
+
+  useEffect(() => {
+    const storedAge = localStorage.getItem('userAge');
+    if (storedAge) {
+      setAgeState(parseInt(storedAge, 10));
+    } else {
+      setAgeGateOpen(true);
+    }
+  }, []);
+  
+  const setAge = (newAge: number) => {
+    setAgeState(newAge);
+    localStorage.setItem('userAge', newAge.toString());
+    setAgeGateOpen(false);
+  }
 
   const addSessionData = useCallback((sessionData: SessionData) => {
     // 1. Update progress data
@@ -96,14 +118,14 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
                 if (topicIndex !== -1) {
                     const oldStrength = newData[topicIndex].strength;
                     // Weighted average, giving new session more weight
-                    newData[topicIndex].strength = (oldStrength * 2 + sessionStrength) / 3;
+                    newData[topicIndex].strength = Math.round((oldStrength * 2 + sessionStrength) / 3);
                 } else {
                     // Add new subject if it doesn't exist
-                    newData.push({ topic: subject, strength: sessionStrength });
+                    newData.push({ topic: subject, strength: Math.round(sessionStrength) });
                 }
             }
         });
-        return newData;
+        return newData.sort((a,b) => b.strength - a.strength);
     });
 
   }, []);
@@ -128,6 +150,10 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
     overallProgress,
     strengths,
     weaknesses,
+    age,
+    setAge,
+    isAgeGateOpen,
+    setAgeGateOpen,
     addSessionData,
   };
 

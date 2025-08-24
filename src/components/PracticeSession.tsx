@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, type FormEvent } from 'react';
@@ -6,13 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle2, XCircle, Lightbulb, BookCopy } from 'lucide-react';
+import { CheckCircle2, XCircle, Lightbulb, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { adjustDifficulty } from '@/ai/flows/dynamically-adjust-difficulty';
 import { generatePracticeQuestion, type PracticeQuestion } from '@/ai/flows/generate-practice-question';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePerformance } from '@/hooks/use-performance';
-import { useRouter } from 'next/navigation';
 
 const TOTAL_QUESTIONS = 10;
 
@@ -25,9 +25,10 @@ type PerformanceRecord = {
 
 interface PracticeSessionProps {
     subject: string;
+    onBack: () => void;
 }
 
-export function PracticeSession({ subject }: PracticeSessionProps) {
+export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
   const [difficulty, setDifficulty] = useState(3);
   const [currentQuestion, setCurrentQuestion] = useState<PracticeQuestion | null>(null);
   const [userAnswer, setUserAnswer] = useState('');
@@ -41,8 +42,7 @@ export function PracticeSession({ subject }: PracticeSessionProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
-  const { addSessionData } = usePerformance();
-  const router = useRouter();
+  const { addSessionData, age } = usePerformance();
   
   const startNewQuestion = async (newDifficulty: number, prevQuestions: string[]) => {
     if (!subject) return;
@@ -54,6 +54,7 @@ export function PracticeSession({ subject }: PracticeSessionProps) {
             subject, 
             difficulty: newDifficulty,
             previousQuestions: prevQuestions,
+            age,
         });
         setCurrentQuestion(question);
         setAskedQuestions(prev => [...prev, question.questionText]);
@@ -145,10 +146,6 @@ export function PracticeSession({ subject }: PracticeSessionProps) {
     }
   };
 
-  const restartSession = () => {
-    router.push('/');
-  };
-
   if (isSessionOver) {
     return (
       <Card className="max-w-2xl mx-auto">
@@ -166,7 +163,7 @@ export function PracticeSession({ subject }: PracticeSessionProps) {
           <p className="text-sm text-muted-foreground">Your dashboard has been updated with your latest progress.</p>
         </CardContent>
         <CardFooter>
-          <Button onClick={restartSession}>Back to Dashboard</Button>
+          <Button onClick={onBack}>Back to Subjects</Button>
         </CardFooter>
       </Card>
     );
@@ -175,10 +172,15 @@ export function PracticeSession({ subject }: PracticeSessionProps) {
   return (
     <Card className="max-w-2xl mx-auto shadow-lg">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center">{subject} Practice</CardTitle>
-        <CardDescription className="text-center">
-          Question {questionsAnswered + 1} of {TOTAL_QUESTIONS}
-        </CardDescription>
+        <div className='relative'>
+            <Button variant="ghost" size="icon" className="absolute -left-12 top-1/2 -translate-y-1/2" onClick={onBack}>
+                <ArrowLeft />
+            </Button>
+            <CardTitle className="text-2xl font-bold text-center">{subject} Practice</CardTitle>
+            <CardDescription className="text-center">
+            Question {questionsAnswered + 1} of {TOTAL_QUESTIONS}
+            </CardDescription>
+        </div>
         <Progress value={progressPercentage} className="w-full mt-2" />
       </CardHeader>
       <CardContent className="space-y-6 min-h-[250px]">

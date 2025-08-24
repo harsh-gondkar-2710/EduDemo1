@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Flow for generating a practice question for a given subject and difficulty.
@@ -11,12 +12,13 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GeneratePracticeQuestionInputSchema = z.object({
-  subject: z.string().describe('The subject for the practice question.'),
+  subject: z.string().describe('The subject for the practice question (e.g., "Calculus", "Physics").'),
   difficulty: z
     .number()
     .min(1)
     .max(10)
     .describe('The difficulty level of the question (1-10).'),
+  age: z.number().optional().describe("The student's age, to tailor the question appropriately."),
   previousQuestions: z
     .array(z.string())
     .optional()
@@ -46,6 +48,7 @@ const practiceQuestionPrompt = ai.definePrompt({
 
   The subject is: {{{subject}}}
   The difficulty level (1-10) is: {{{difficulty}}}
+  {{#if age}}The student's age is: {{{age}}}{{/if}}
 
   {{#if previousQuestions}}
   The user has already answered the following questions in this session. Do not generate a question that is substantially similar to any of these:
@@ -54,7 +57,7 @@ const practiceQuestionPrompt = ai.definePrompt({
   {{/each}}
   {{/if}}
 
-  Please generate one question that is appropriate for the given subject and difficulty level.
+  Please generate one question that is appropriate for the given subject, difficulty level, and student age.
   The question should be clear and concise.
   The answer should be a simple string or number. Avoid complex answers.
   `,

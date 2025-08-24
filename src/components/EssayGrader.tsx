@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, type FormEvent } from 'react';
@@ -7,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { gradeEssay, type EssayFeedback } from '@/ai/flows/grade-essay';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PenSquare, Check, X } from 'lucide-react';
+import { PenSquare, Check, X, Sparkles } from 'lucide-react';
+import { Separator } from './ui/separator';
 
 export function EssayGrader() {
   const [essayText, setEssayText] = useState('');
@@ -89,32 +91,44 @@ export function EssayGrader() {
                     Feedback
                 </CardTitle>
             </CardHeader>
-            <CardContent className="prose dark:prose-invert">
+            <CardContent className="prose dark:prose-invert max-w-none">
                 <h3 className="text-xl font-semibold">Overall Score: {feedback.overallScore}/100</h3>
                 <p>{feedback.overallFeedback}</p>
                 
-                <div className="mt-6">
-                    <h4 className="text-lg font-semibold">Strengths:</h4>
-                    <ul className="list-disc pl-5">
-                        {feedback.strengths.map((strength, index) => (
-                           <li key={index} className="flex items-start gap-2 text-green-700 dark:text-green-400">
-                                <Check className="h-5 w-5 mt-1 shrink-0"/>
-                                <span>{strength}</span>
-                           </li> 
-                        ))}
-                    </ul>
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 className="text-lg font-semibold">Strengths:</h4>
+                        <ul className="list-none p-0 mt-2 space-y-2">
+                            {feedback.strengths.map((strength, index) => (
+                               <li key={index} className="flex items-start gap-2 text-green-700 dark:text-green-400">
+                                    <Check className="h-5 w-5 mt-1 shrink-0"/>
+                                    <span>{strength}</span>
+                               </li> 
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 className="text-lg font-semibold">Areas for Improvement:</h4>
+                        <ul className="list-none p-0 mt-2 space-y-2">
+                            {feedback.areasForImprovement.map((area, index) => (
+                                <li key={index} className="flex items-start gap-2 text-red-700 dark:text-red-400">
+                                    <X className="h-5 w-5 mt-1 shrink-0" />
+                                    <span>{area}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 </div>
 
-                <div className="mt-4">
-                    <h4 className="text-lg font-semibold">Areas for Improvement:</h4>
-                    <ul className="list-disc pl-5">
-                        {feedback.areasForImprovement.map((area, index) => (
-                            <li key={index} className="flex items-start gap-2 text-red-700 dark:text-red-400">
-                                <X className="h-5 w-5 mt-1 shrink-0" />
-                                <span>{area}</span>
-                            </li>
-                        ))}
-                    </ul>
+                <Separator className="my-6" />
+
+                <div>
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                        <Sparkles className="text-accent" />
+                        Enhanced Version
+                    </h3>
+                    <p className="mt-2 bg-secondary/50 p-4 rounded-md whitespace-pre-wrap">{feedback.enhancedEssay}</p>
                 </div>
             </CardContent>
         </Card>

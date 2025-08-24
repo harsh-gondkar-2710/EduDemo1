@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Flow for grading an essay and providing feedback.
@@ -20,6 +21,7 @@ const EssayFeedbackSchema = z.object({
   overallFeedback: z.string().describe('A paragraph summarizing the overall quality of the essay.'),
   strengths: z.array(z.string()).describe('A list of specific strengths of the essay.'),
   areasForImprovement: z.array(z.string()).describe('A list of specific areas where the essay could be improved.'),
+  enhancedEssay: z.string().describe('An enhanced version of the original essay, rewritten to incorporate the suggested improvements.'),
 });
 export type EssayFeedback = z.infer<typeof EssayFeedbackSchema>;
 
@@ -44,6 +46,7 @@ const gradeEssayPrompt = ai.definePrompt({
   1. An overall summary of the essay's quality.
   2. A list of 2-3 specific strengths.
   3. A list of 2-3 specific areas for improvement with actionable advice.
+  4. A rewritten, enhanced version of the essay that incorporates your suggested improvements. The tone and core message should remain the same as the original.
   
   Be encouraging and focus on helping the writer improve.
   `,
