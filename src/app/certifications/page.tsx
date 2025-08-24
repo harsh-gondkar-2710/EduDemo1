@@ -28,20 +28,14 @@ function CertificationsFallback() {
   );
 }
 
-function CertificationsContent() {
+export default function CertificationsPage() {
   return (
     <SidebarInset>
       <div className="container mx-auto px-4 py-8 md:px-6">
-        <Certifications />
+        <Suspense fallback={<CertificationsFallback />}>
+          <Certifications />
+        </Suspense>
       </div>
     </SidebarInset>
-  );
-}
-
-export default function CertificationsPage() {
-  return (
-    <Suspense fallback={<CertificationsFallback />}>
-      <CertificationsContent />
-    </Suspense>
   );
 }
