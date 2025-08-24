@@ -1,39 +1,19 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart } from 'recharts';
-import { Lightbulb, BookOpen, Brain, TrendingUp, Award, Bot, ScanSearch, PencilRuler, Map, Goal } from 'lucide-react';
-import { generatePersonalizedRecommendations } from '@/ai/flows/generate-personalized-recommendations';
-import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { TrendingUp, Award, Bot, ScanSearch, PencilRuler, Map, Goal, Lock } from 'lucide-react';
 import { usePerformance } from '@/hooks/use-performance';
 import { AgeGate } from './AgeGate';
 import { Badge } from './ui/badge';
 
 const chartConfig: ChartConfig = {
   score: { label: 'Score', color: 'hsl(var(--primary))' },
-  strength: { label: 'Strength', color: 'hsl(var(--accent))' },
-};
-
-const mockStudentData = {
-  studentId: 'student-123',
-  pastPerformanceData: JSON.stringify([
-    { topic: 'Addition', correct: 19, total: 20 },
-    { topic: 'Subtraction', correct: 16, total: 20 },
-    { topic: 'Multiplication', correct: 14, total: 20, struggledWith: 'double digits' },
-    { topic: 'Division', correct: 12, total: 20, struggledWith: 'remainders' },
-  ]),
-  availableLessons: JSON.stringify([
-    'Two-Digit Multiplication Practice',
-    'Understanding Remainders in Division',
-    'Advanced Addition',
-    'Complex Subtraction with Borrowing',
-  ]),
 };
 
 const appFeatures = [
@@ -44,12 +24,22 @@ const appFeatures = [
     { href: '/goals', label: 'Study Goals', icon: Goal, description: 'Track your learning objectives and deadlines.' },
 ]
 
+const motivationalQuotes = [
+    "The only way to do great work is to love what you do.",
+    "Believe you can and you're halfway there.",
+    "The expert in anything was once a beginner.",
+    "The beautiful thing about learning is that no one can take it away from you.",
+    "Strive for progress, not perfection."
+];
+
 export function Dashboard() {
-  const [recommendations, setRecommendations] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const { progressData, topicPerformanceData, overallProgress, strengths, weaknesses, completedGoalsCount } = usePerformance();
-  
+  const { progressData, overallProgress, completedGoalsCount } = usePerformance();
+  const [quote, setQuote] = useState('');
+
+  useEffect(() => {
+    setQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
+  }, []);
+
   const lastWeekProgress = useMemo(() => {
     if (progressData.length < 2) return 0;
     const lastScore = progressData[progressData.length - 1].score;
@@ -58,47 +48,24 @@ export function Dashboard() {
     return Math.round(((lastScore - secondLastScore) / secondLastScore) * 100);
   }, [progressData]);
 
-  const badges = useMemo(() => {
-    const earnedBadges = [];
-    if (overallProgress > 80) {
-        earnedBadges.push({ name: 'High Achiever', description: 'Maintain an overall score above 80%.' });
-    }
-    if (progressData.length >= 5) {
-        earnedBadges.push({ name: 'Consistent Learner', description: 'Complete 5 practice sessions.' });
-    }
-    if (completedGoalsCount >= 5) {
-        earnedBadges.push({ name: 'Goal Setter', description: 'Complete 5 study goals.' });
-    }
-    return earnedBadges;
-  }, [overallProgress, progressData.length, completedGoalsCount]);
+  const allBadges = useMemo(() => [
+    { name: 'High Achiever', description: 'Maintain an overall score above 80%.', earned: overallProgress > 80 },
+    { name: 'Consistent Learner', description: 'Complete 5 practice sessions.', earned: progressData.length >= 5 },
+    { name: 'Goal Setter', description: 'Complete 5 study goals.', earned: completedGoalsCount >= 5 },
+  ], [overallProgress, progressData.length, completedGoalsCount]);
 
-
-  const handleGetRecommendations = async () => {
-    setIsLoading(true);
-    try {
-      const result = await generatePersonalizedRecommendations(mockStudentData);
-      setRecommendations(result.recommendations);
-    } catch (error) {
-      console.error('Failed to get recommendations:', error);
-      toast({
-        variant: 'destructive',
-        title: 'AI Error',
-        description: 'Could not fetch recommendations.',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const earnedBadges = allBadges.filter(b => b.earned);
+  const unearnedBadges = allBadges.filter(b => !b.earned);
 
   return (
     <div className="space-y-8">
       <AgeGate />
       <div className="text-center">
-        <h1 className="text-4xl font-bold">Welcome back!</h1>
-        <p className="text-muted-foreground mt-2">Here's a summary of your progress. Keep up the great work!</p>
+        <h1 className="text-4xl font-bold">Welcome, Learner!</h1>
+        <p className="text-muted-foreground mt-2 italic">"{quote}"</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Overall Progress</CardTitle>
@@ -111,29 +78,7 @@ export function Dashboard() {
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Strengths</CardTitle>
-            <Brain className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{strengths[0] || 'N/A'}</div>
-            <p className="text-xs text-muted-foreground">Your strongest area</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Areas for Improvement</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{weaknesses[0] || 'N/A'}</div>
-            <p className="text-xs text-muted-foreground">Let's focus here!</p>
-          </CardContent>
-        </Card>
-      </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Progress Over Time</CardTitle>
@@ -151,83 +96,47 @@ export function Dashboard() {
             </ChartContainer>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Topic Performance</CardTitle>
-            <CardDescription>Your current strength in each topic.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[250px] w-full">
-              <BarChart data={topicPerformanceData} layout="vertical" margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
-                <CartesianGrid horizontal={false} />
-                <XAxis type="number" hide />
-                <YAxis dataKey="topic" type="category" tickLine={false} axisLine={false} tickMargin={5} width={80}/>
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="strength" layout="vertical" fill="var(--color-strength)" radius={4} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
       </div>
       
-       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+       <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Award className="text-primary" />
                     Achievements
                 </CardTitle>
                 <CardDescription>
-                    You've earned {badges.length} badge(s) for your hard work.
+                    Unlock new badges by completing goals and practice sessions.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-wrap gap-4">
-                {badges.length > 0 ? (
-                    badges.map(badge => (
-                        <Badge key={badge.name} variant="secondary" className="text-base py-1 px-3">
-                           {badge.name}
-                        </Badge>
-                    ))
-                ) : (
-                    <p className="text-sm text-muted-foreground">Keep learning to earn new badges!</p>
-                )}
-            </CardContent>
-        </Card>
-
-        <Card className="bg-primary/10 border-primary">
-            <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-                <Lightbulb className="text-primary" />
-                Personalized Recommendations
-            </CardTitle>
-            <CardDescription>
-                Based on your recent performance, here are some areas to focus on next.
-            </CardDescription>
-            </CardHeader>
-            <CardContent>
-            {isLoading ? (
-                <div className="space-y-2">
-                <Skeleton className="h-6 w-full" />
-                <Skeleton className="h-6 w-3/4" />
+            <CardContent className="space-y-4">
+                <div>
+                    <h3 className="font-semibold mb-2">Unlocked ({earnedBadges.length})</h3>
+                     <div className="flex flex-wrap gap-4">
+                        {earnedBadges.length > 0 ? (
+                            earnedBadges.map(badge => (
+                                <Badge key={badge.name} variant="default" className="text-base py-2 px-4">
+                                   {badge.name}
+                                </Badge>
+                            ))
+                        ) : (
+                            <p className="text-sm text-muted-foreground">Keep learning to earn new badges!</p>
+                        )}
+                    </div>
                 </div>
-            ) : recommendations.length > 0 ? (
-                <ul className="list-disc space-y-2 pl-5">
-                {recommendations.map((rec, index) => (
-                    <li key={index}>{rec}</li>
-                ))}
-                </ul>
-            ) : (
-                <p className="text-sm text-muted-foreground">Click the button to generate your recommendations.</p>
-            )}
+                 <div>
+                    <h3 className="font-semibold mb-2">Locked ({unearnedBadges.length})</h3>
+                     <div className="flex flex-wrap gap-4">
+                        {unearnedBadges.map(badge => (
+                            <div key={badge.name} className="flex flex-col items-center gap-2 text-center p-4 border rounded-lg bg-muted/50 w-40">
+                                <Lock className="h-6 w-6 text-muted-foreground" />
+                                <span className="font-semibold text-sm">{badge.name}</span>
+                                <span className="text-xs text-muted-foreground">{badge.description}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </CardContent>
-            <CardFooter>
-            <Button onClick={handleGetRecommendations} disabled={isLoading}>
-                {isLoading ? 'Generating...' : 'Get My Recommendations'}
-            </Button>
-            </CardFooter>
         </Card>
-      </div>
 
        <div>
         <h2 className="text-2xl font-bold mb-4 text-center">Explore Your Tools</h2>
