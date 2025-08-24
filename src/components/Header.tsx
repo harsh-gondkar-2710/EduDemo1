@@ -23,7 +23,6 @@ export function Header() {
     { href: '/practice', label: 'Practice', icon: PencilRuler },
     { href: '/career', label: 'Career Mapper', icon: Map },
     { href: '/goals', label: 'Study Goals', icon: Goal },
-    { href: '/profile', label: 'Profile', icon: UserIcon },
   ];
 
   return (
@@ -59,6 +58,18 @@ export function Header() {
       <SidebarFooter>
         <Separator className="my-2" />
         <SidebarMenu>
+            <SidebarMenuItem>
+                 <Link href="/profile" className='w-full'>
+                    <SidebarMenuButton
+                        isActive={pathname === '/profile'}
+                        tooltip="Profile"
+                        className="justify-start"
+                    >
+                        <UserIcon />
+                        <span className={`${state === 'collapsed' && 'md:hidden'}`}>Profile</span>
+                    </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
             <SidebarMenuItem>
                 {user ? (
                     <SidebarMenuButton onClick={logout} tooltip="Logout" className="justify-start w-full">
