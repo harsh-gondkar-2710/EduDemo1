@@ -7,7 +7,7 @@ import { PerformanceProvider } from '@/hooks/use-performance';
 
 export const metadata: Metadata = {
   title: 'AdaptiLearn',
-  description: 'An AI-powered adaptive math tutor.',
+  description: 'An AI-powered adaptive learning platform.',
 };
 
 export default function RootLayout({

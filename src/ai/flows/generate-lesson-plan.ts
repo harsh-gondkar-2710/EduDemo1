@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview Flow for generating a personalized lesson plan for a given math topic.
+ * @fileOverview Flow for generating a personalized lesson plan for a given topic.
  *
  * - generateLessonPlan - Function to generate the lesson plan.
  * - GenerateLessonPlanInput - Input type for the function.
@@ -12,7 +12,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateLessonPlanInputSchema = z.object({
-  topic: z.string().describe('The math topic the user wants to learn.'),
+  topic: z.string().describe('The topic the user wants to learn about.'),
 });
 export type GenerateLessonPlanInput = z.infer<typeof GenerateLessonPlanInputSchema>;
 
@@ -51,7 +51,7 @@ const lessonPlanPrompt = ai.definePrompt({
   name: 'lessonPlanPrompt',
   input: { schema: GenerateLessonPlanInputSchema },
   output: { schema: LessonPlanSchema },
-  prompt: `You are an expert math tutor. Your task is to create a simple and clear lesson plan for a student who wants to learn about a specific math topic.
+  prompt: `You are an expert tutor. Your task is to create a simple and clear lesson plan for a student who wants to learn about a specific topic.
 
   The topic is: {{{topic}}}
 

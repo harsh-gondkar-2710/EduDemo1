@@ -72,7 +72,7 @@ export function AITutor() {
     <div className="space-y-8">
       <div className="text-center">
         <h1 className="text-4xl font-bold">AI Tutor</h1>
-        <p className="text-muted-foreground mt-2">Enter a math topic you want to learn about, and I'll create a personalized lesson for you.</p>
+        <p className="text-muted-foreground mt-2">Enter any topic you want to learn about, and I'll create a personalized lesson for you.</p>
       </div>
       
       <Card>
@@ -84,7 +84,7 @@ export function AITutor() {
             <Input
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g., 'Pythagorean Theorem', 'Quadratic Equations'"
+              placeholder="e.g., 'Pythagorean Theorem', 'The French Revolution', 'How Photosynthesis Works'"
               disabled={isLoading}
             />
           </CardContent>
