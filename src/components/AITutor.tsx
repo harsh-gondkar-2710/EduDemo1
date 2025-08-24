@@ -131,13 +131,17 @@ export function AITutor() {
                         {lessonPlan.title}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="prose dark:prose-invert">
+                <CardContent className="prose dark:prose-invert max-w-none">
                     <p>{lessonPlan.introduction}</p>
                     <h3 className="text-lg font-semibold mt-4">Key Concepts</h3>
-                    <ul className="list-disc pl-5">
-                    {lessonPlan.keyConcepts.map((concept, index) => (
-                        <li key={index}>{concept}</li>
-                    ))}
+                    <ul className="list-disc pl-5 space-y-4">
+                      {lessonPlan.keyConcepts.map((item, index) => (
+                        <li key={index}>
+                          <strong>{item.concept}:</strong> {item.explanation}
+                          <br />
+                          <em>Example: {item.example}</em>
+                        </li>
+                      ))}
                     </ul>
                     <h3 className="text-lg font-semibold mt-4">Example</h3>
                     <p>{lessonPlan.example.problem}</p>
