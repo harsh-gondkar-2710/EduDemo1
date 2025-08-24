@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { generateLessonPlan, type LessonPlan } from '@/ai/flows/generate-lesson-plan';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit } from 'lucide-react';
+import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -21,6 +21,7 @@ export function PersonalisedTutor() {
   const [subject, setSubject] = useState('General');
   const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshingVideos, setIsRefreshingVideos] = useState(false);
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; explanation: string } | null>(null);
@@ -55,6 +56,26 @@ export function PersonalisedTutor() {
       setIsLoading(false);
     }
   };
+
+  const handleRefreshVideos = async () => {
+    if (!topic) return;
+    setIsRefreshingVideos(true);
+    try {
+      const result = await generateLessonPlan({ topic: `${topic} (in the context of ${subject})` });
+      setLessonPlan(prev => prev ? { ...prev, youtubeVideoIds: result.youtubeVideoIds } : result);
+      setCurrentVideoIndex(0); // Reset to the first video in the new list
+      toast({ title: "Videos refreshed!", description: "Here's a new set of videos for you." });
+    } catch (error) {
+      console.error('Failed to refresh videos:', error);
+      toast({
+        variant: 'destructive',
+        title: 'AI Error',
+        description: 'Could not fetch new videos at this time.',
+      });
+    } finally {
+      setIsRefreshingVideos(false);
+    }
+  }
 
   const handleCheckAnswer = (e: FormEvent) => {
     e.preventDefault();
@@ -192,7 +213,11 @@ export function PersonalisedTutor() {
                 </CardHeader>
                 <CardContent>
                     <div className="aspect-video">
-                        {currentVideoId ? (
+                        {isRefreshingVideos ? (
+                            <div className="w-full h-full rounded-lg bg-muted flex items-center justify-center">
+                                <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        ) : currentVideoId ? (
                             <iframe
                                 key={currentVideoId}
                                 className="w-full h-full rounded-lg"
@@ -209,11 +234,17 @@ export function PersonalisedTutor() {
                         )}
                     </div>
                 </CardContent>
-                <CardFooter className='gap-4'>
-                    <Button onClick={() => setTutorView('lesson')} variant="outline">Back to Lesson</Button>
-                    <Button onClick={resetPractice} variant="secondary">
-                       <BrainCircuit className="mr-2" />
-                        Practice
+                <CardFooter className='gap-4 justify-between'>
+                    <div>
+                        <Button onClick={() => setTutorView('lesson')} variant="outline">Back to Lesson</Button>
+                        <Button onClick={resetPractice} variant="secondary" className="ml-2">
+                           <BrainCircuit className="mr-2" />
+                            Practice
+                        </Button>
+                    </div>
+                    <Button onClick={handleRefreshVideos} disabled={isRefreshingVideos} variant="ghost">
+                        <RefreshCw className={`mr-2 ${isRefreshingVideos ? 'animate-spin' : ''}`} />
+                        Refresh
                     </Button>
                 </CardFooter>
             </Card>
@@ -264,3 +295,5 @@ export function PersonalisedTutor() {
     </div>
   );
 }
+
+    
