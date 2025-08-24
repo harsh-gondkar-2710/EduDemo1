@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from './ui/separator';
 
 type TutorView = 'lesson' | 'practice';
 
@@ -186,13 +187,23 @@ export function PersonalisedTutor() {
                 </CardHeader>
                 <CardContent className="prose dark:prose-invert max-w-none">
                     <p>{lessonPlan.introduction}</p>
+                    
                     <h3 className="text-lg font-semibold mt-4">Key Concepts</h3>
-                    <ul className="list-disc pl-5">
-                    {lessonPlan.keyConcepts.map((concept, index) => (
-                        <li key={index}>{concept}</li>
-                    ))}
-                    </ul>
-                    <h3 className="text-lg font-semibold mt-4">Example</h3>
+                    <div className="space-y-4">
+                        {lessonPlan.keyConcepts.map((concept, index) => (
+                            <div key={index} className="p-4 rounded-md border">
+                                <h4 className='font-semibold'>{concept.concept}</h4>
+                                <p>{concept.explanation}</p>
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    <span className="font-semibold">Example:</span> {concept.example}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <Separator className="my-6" />
+
+                    <h3 className="text-lg font-semibold mt-4">Example Problem</h3>
                     <p>{lessonPlan.example.problem}</p>
                     <p><strong>Solution:</strong> {lessonPlan.example.solution}</p>
 
