@@ -27,8 +27,8 @@ export function PersonalisedTutor() {
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; explanation: string } | null>(null);
   const [tutorView, setTutorView] = useState<TutorView>('lesson');
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [videoError, setVideoError] = useState(false);
+  const [videoIds, setVideoIds] = useState<string[]>([]);
   const { toast } = useToast();
   
   // Add a state to track if the component has mounted on the client
@@ -47,13 +47,16 @@ export function PersonalisedTutor() {
     setCurrentProblemIndex(0);
     setUserAnswer('');
     setTutorView('lesson');
-    setCurrentVideoIndex(0);
     setVideoError(false);
+    setVideoIds([]);
 
     try {
       // The AI flow can be enhanced to take the subject for more context
       const result = await generateLessonPlan({ topic: `${topic} (in the context of ${subject})` });
       setLessonPlan(result);
+      if (result.youtubeVideoIds) {
+        setVideoIds(result.youtubeVideoIds);
+      }
     } catch (error) {
       console.error('Failed to generate lesson plan:', error);
       toast({
@@ -66,12 +69,23 @@ export function PersonalisedTutor() {
     }
   };
 
-  const handleCycleVideo = () => {
-    if (lessonPlan && lessonPlan.youtubeVideoIds.length > 0) {
+  const handleNextVideo = () => {
+    if (videoIds.length > 1) {
         setVideoError(false);
-        setCurrentVideoIndex(prevIndex => (prevIndex + 1) % lessonPlan.youtubeVideoIds.length);
+        // Create a new array with the current video ID moved to the end,
+        // effectively cycling to the next one.
+        setVideoIds(prevIds => {
+            const [first, ...rest] = prevIds;
+            return [...rest, first];
+        });
+    } else if (videoIds.length === 1) {
+        toast({
+            title: "Last Video",
+            description: "You've seen all the available videos for this topic."
+        });
     }
   };
+
 
   const handleCheckAnswer = (e: FormEvent) => {
     e.preventDefault();
@@ -105,16 +119,16 @@ export function PersonalisedTutor() {
   }
 
   const handleVideoError = () => {
-    if (lessonPlan && currentVideoIndex < lessonPlan.youtubeVideoIds.length - 1) {
-        // Try the next video if the current one fails
-        handleCycleVideo();
+    if (videoIds.length > 1) {
+        // Remove the problematic video and try the next one.
+        setVideoIds(prev => prev.slice(1));
     } else {
-        // If all videos fail, show the error state
+        // If it was the last video, show the error state.
         setVideoError(true);
     }
   };
 
-  const currentVideoId = lessonPlan?.youtubeVideoIds[currentVideoIndex];
+  const currentVideoId = videoIds.length > 0 ? videoIds[0] : null;
   const videoWatchUrl = currentVideoId ? `https://www.youtube.com/watch?v=${currentVideoId}` : '';
   const videoEmbedUrl = currentVideoId ? `https://www.youtube.com/embed/${currentVideoId}` : '';
 
@@ -216,7 +230,7 @@ export function PersonalisedTutor() {
                 </CardHeader>
                 <CardContent>
                     <div className="aspect-video">
-                        {(!currentVideoId) ? (
+                        {!currentVideoId ? (
                             <div className="w-full h-full rounded-lg bg-muted flex items-center justify-center">
                                 <p>No videos available for this topic.</p>
                             </div>
@@ -257,8 +271,8 @@ export function PersonalisedTutor() {
                             Practice
                         </Button>
                     </div>
-                    {lessonPlan.youtubeVideoIds.length > 1 && (
-                      <Button onClick={handleCycleVideo} variant="ghost">
+                    {videoIds.length > 1 && (
+                      <Button onClick={handleNextVideo} variant="ghost">
                           <RefreshCw className="mr-2" />
                           Next Video
                       </Button>
@@ -312,3 +326,5 @@ export function PersonalisedTutor() {
     </div>
   );
 }
+
+  
