@@ -1,15 +1,16 @@
 
 'use client';
 
-import { useState, type FormEvent, useEffect } from 'react';
+import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { generateLessonPlan, type LessonPlan } from '@/ai/flows/generate-lesson-plan';
+import { generateVideo } from '@/ai/flows/generate-video';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit, RefreshCw, AlertCircle, ExternalLink } from 'lucide-react';
+import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit, RefreshCw, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -27,6 +28,8 @@ export function PersonalisedTutor() {
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; explanation: string } | null>(null);
   const [tutorView, setTutorView] = useState<TutorView>('lesson');
   const [videoIds, setVideoIds] = useState<string[]>([]);
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  const [aiVideoUrl, setAiVideoUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleGeneratePlan = async (e: FormEvent) => {
@@ -40,11 +43,12 @@ export function PersonalisedTutor() {
     setUserAnswer('');
     setTutorView('lesson');
     setVideoIds([]);
+    setAiVideoUrl(null);
 
     try {
       const result = await generateLessonPlan({ topic: `${topic} (in the context of ${subject})` });
       setLessonPlan(result);
-      if (result.youtubeVideoIds) {
+      if (result.youtubeVideoIds && result.youtubeVideoIds.length > 0) {
         setVideoIds(result.youtubeVideoIds);
       }
     } catch (error) {
@@ -58,11 +62,30 @@ export function PersonalisedTutor() {
       setIsLoading(false);
     }
   };
+  
+  const handleGenerateAiVideo = async () => {
+    if (!lessonPlan) return;
+    setIsGeneratingVideo(true);
+    setAiVideoUrl(null);
+    try {
+      const result = await generateVideo({ topic: lessonPlan.title });
+      setAiVideoUrl(result.videoDataUri);
+    } catch (error) {
+      console.error('Failed to generate AI video:', error);
+      toast({
+        variant: 'destructive',
+        title: 'AI Video Error',
+        description: 'Could not generate a video at this time. Please try again later.',
+      });
+    } finally {
+        setIsGeneratingVideo(false);
+    }
+  }
 
   const handleNextVideo = () => {
     if (videoIds.length > 1) {
-        // Remove the first video and cycle to the next one.
-        setVideoIds(prevIds => prevIds.slice(1));
+        const remainingVideos = videoIds.slice(1);
+        setVideoIds(remainingVideos);
     }
   };
 
@@ -199,27 +222,46 @@ export function PersonalisedTutor() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="aspect-video">
-                        {!currentVideoId ? (
-                             <div className="w-full h-full rounded-lg bg-muted flex flex-col items-center justify-center text-center p-4">
-                                <AlertCircle className="h-8 w-8 text-destructive mb-2" />
-                                <p className="font-semibold">No Videos Available</p>
-                                <p className="text-sm text-muted-foreground">
-                                  Try a different topic to find videos.
-                                </p>
-                            </div>
-                        ) : (
-                            <iframe
-                                key={currentVideoId}
-                                className="w-full h-full rounded-lg"
-                                src={videoEmbedUrl}
-                                title="YouTube video player"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            ></iframe>
-                        )}
-                    </div>
-                    {currentVideoId && (
+                    {aiVideoUrl ? (
+                         <div className="aspect-video">
+                            <video src={aiVideoUrl} controls className="w-full h-full rounded-lg bg-black" />
+                         </div>
+                    ) : (
+                        <div className="aspect-video">
+                            {!currentVideoId ? (
+                                <div className="w-full h-full rounded-lg bg-muted flex flex-col items-center justify-center text-center p-4">
+                                    <AlertCircle className="h-8 w-8 text-destructive mb-2" />
+                                    <p className="font-semibold">No YouTube Videos Available</p>
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                      If the video is unavailable, watch an AI-generated video.
+                                    </p>
+                                    <Button onClick={handleGenerateAiVideo} disabled={isGeneratingVideo}>
+                                        {isGeneratingVideo ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                Generating...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles className="mr-2" />
+                                                Watch AI-generated video
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            ) : (
+                                <iframe
+                                    key={currentVideoId}
+                                    className="w-full h-full rounded-lg"
+                                    src={videoEmbedUrl}
+                                    title="YouTube video player"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                ></iframe>
+                            )}
+                        </div>
+                    )}
+                    {currentVideoId && !aiVideoUrl && (
                          <div className='flex items-center gap-2 mt-2'>
                             <AlertCircle className='h-4 w-4 text-muted-foreground' />
                             <p className='text-sm text-muted-foreground'>
@@ -242,10 +284,12 @@ export function PersonalisedTutor() {
                             Practice
                         </Button>
                     </div>
-                    <Button onClick={handleNextVideo} variant="ghost" disabled={videoIds.length <= 1}>
-                        <RefreshCw className="mr-2" />
-                        Next Video
-                    </Button>
+                    {currentVideoId && !aiVideoUrl && (
+                        <Button onClick={handleNextVideo} variant="ghost" disabled={videoIds.length <= 1}>
+                            <RefreshCw className="mr-2" />
+                            Next Video
+                        </Button>
+                    )}
                 </CardFooter>
             </Card>
           )}
