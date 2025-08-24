@@ -2,18 +2,18 @@
 
 import { useState, useEffect, type FormEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Award } from 'lucide-react';
-import { recommendCourses, type RecommendCoursesOutput } from '@/ai/flows/recommend-courses';
+import { Search, Award, BookOpen } from 'lucide-react';
+import { recommendCourses } from '@/ai/flows/recommend-courses';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Course = {
   title: string;
   provider: string;
+  description: string;
 };
 
 export function Certifications() {
@@ -43,7 +43,6 @@ export function Certifications() {
     }
   };
   
-  // Automatically search if a query is passed from another page (e.g., Career Mapper)
   useEffect(() => {
     if (initialQuery) {
       handleGetRecommendations(initialQuery);
@@ -96,40 +95,34 @@ export function Certifications() {
         </h2>
         
         {isLoading && (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {[...Array(6)].map((_, index) => (
-                    <Card key={index}>
-                        <CardHeader>
-                            <Skeleton className="h-[160px] w-full rounded-t-lg" />
-                            <Skeleton className="h-6 w-3/4 mt-4" />
-                            <Skeleton className="h-4 w-1/2" />
-                        </CardHeader>
-                        <CardFooter>
-                            <Skeleton className="h-10 w-full" />
-                        </CardFooter>
+            <div className="space-y-4">
+                {[...Array(5)].map((_, index) => (
+                    <Card key={index} className="p-4">
+                        <Skeleton className="h-6 w-3/4 mb-2" />
+                        <Skeleton className="h-4 w-1/2 mb-4" />
+                        <Skeleton className="h-4 w-full" />
                     </Card>
                 ))}
             </div>
         )}
         
         {recommendedCourses.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-4">
             {recommendedCourses.map((course, index) => (
-              <Card key={index} className="flex flex-col">
-                <CardHeader className="flex-grow">
-                  <div className="aspect-[3/2] relative w-full mb-4">
-                    <Image src="https://placehold.co/600x400.png" alt={course.title} layout="fill" objectFit="cover" className="rounded-t-lg" data-ai-hint="online course learning"/>
-                  </div>
-                  <CardTitle>{course.title}</CardTitle>
-                  <CardDescription>{course.provider}</CardDescription>
-                </CardHeader>
-                <CardFooter>
-                  <Button className="w-full" asChild>
-                    <a href={`https://www.google.com/search?q=${encodeURIComponent(course.title + " " + course.provider)}`} target="_blank" rel="noopener noreferrer">
-                        Find on Google
-                    </a>
-                  </Button>
-                </CardFooter>
+              <Card key={index} className="p-4">
+                  <CardTitle className="text-lg font-semibold flex items-start gap-3">
+                    <BookOpen className="h-5 w-5 mt-1 text-primary shrink-0" />
+                    <span>{course.title}</span>
+                  </CardTitle>
+                  <CardDescription className="ml-8">by {course.provider}</CardDescription>
+                  <CardContent className="p-0 ml-8 mt-2">
+                      <p className="text-sm">{course.description}</p>
+                      <Button asChild variant="link" className="px-0 h-auto py-0 mt-2">
+                        <a href={`https://www.google.com/search?q=${encodeURIComponent(course.title + " " + course.provider)}`} target="_blank" rel="noopener noreferrer">
+                            Find on Google
+                        </a>
+                      </Button>
+                  </CardContent>
               </Card>
             ))}
           </div>

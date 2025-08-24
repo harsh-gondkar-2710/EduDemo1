@@ -19,6 +19,7 @@ export type RecommendCoursesInput = z.infer<typeof RecommendCoursesInputSchema>;
 const CourseRecommendationSchema = z.object({
   title: z.string().describe('The full title of the recommended course.'),
   provider: z.string().describe('The platform or institution offering the course (e.g., Coursera, Udemy, MIT).'),
+  description: z.string().describe('A short, one-sentence description of the course.'),
 });
 
 const RecommendCoursesOutputSchema = z.object({
@@ -43,6 +44,7 @@ const recommendCoursesPrompt = ai.definePrompt({
   For each course, provide:
   1.  'title': The full, official name of the course.
   2.  'provider': The name of the platform or institution that offers it (e.g., "Coursera", "Udemy", "DeepLearning.AI", "Google").
+  3.  'description': A short, one-sentence description summarizing what the course covers.
 
   Ensure the recommendations are highly relevant to the user's search topic and are from reputable sources. The final output must be a JSON object matching the provided schema.
   `,

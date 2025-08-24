@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { generateCareerRoadmap, type CareerRoadmap } from '@/ai/flows/generate-career-roadmap';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Award, Briefcase, Map, Search, Sparkles } from 'lucide-react';
+import { Award, Briefcase, Map, Search, Sparkles, BookOpen } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Separator } from '@/components/ui/separator';
 
 export function CareerMapper() {
   const [jobRole, setJobRole] = useState('');
@@ -45,8 +46,8 @@ export function CareerMapper() {
     handleGenerateRoadmap(jobRole);
   };
   
-  const handleFindCourse = (skill: string) => {
-    router.push(`/certifications?q=${encodeURIComponent(skill)}`);
+  const handleFindCourse = (courseTitle: string) => {
+    router.push(`/certifications?q=${encodeURIComponent(courseTitle)}`);
   };
   
   const handleAddToGoals = () => {
@@ -135,14 +136,37 @@ export function CareerMapper() {
                   </AccordionTrigger>
                   <AccordionContent className="prose dark:prose-invert max-w-none pl-12">
                     <p>{step.description}</p>
-                    <Button variant="secondary" size="sm" className="mt-2" onClick={() => handleFindCourse(step.skill)}>
-                        <Award className='mr-2' />
-                        Find a course for this skill
-                    </Button>
                   </AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
+            
+            {roadmap.recommendedCourses && roadmap.recommendedCourses.length > 0 && (
+                <>
+                    <Separator className="my-6" />
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-semibold flex items-center gap-2">
+                            <Award className="text-accent" />
+                            Recommended Courses
+                        </h3>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {roadmap.recommendedCourses.map((course, index) => (
+                                <Card key={index} className="p-4">
+                                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                                        <BookOpen className="h-5 w-5 text-primary" />
+                                        {course.title}
+                                    </CardTitle>
+                                    <CardDescription className="mt-1">by {course.provider}</CardDescription>
+                                    <Button size="sm" variant="link" className="px-0" onClick={() => handleFindCourse(course.title)}>
+                                        Find this course
+                                    </Button>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+                </>
+            )}
+
           </CardContent>
           <CardFooter>
             <Button onClick={handleAddToGoals}>
