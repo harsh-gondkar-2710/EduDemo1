@@ -50,29 +50,27 @@ interface PerformanceContextType {
 
 const PerformanceContext = createContext<PerformanceContextType | undefined>(undefined);
 
-// Initial mock data
-const initialProgressData: ProgressData[] = [
-    { date: 'Day 1', score: 60 },
-    { date: 'Day 2', score: 65 },
-    { date: 'Day 3', score: 75 },
-    { date: 'Day 4', score: 70 },
-    { date: 'Day 5', score: 85 },
-    { date: 'Day 6', score: 90 },
-];
-
 export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [progressData, setProgressData] = useState<ProgressData[]>(initialProgressData);
+  const [progressData, setProgressData] = useState<ProgressData[]>([]);
   const [completedGoalsCount, setCompletedGoalsCount] = useState(0);
   const [age, setAgeState] = useState<number | null>(null);
   const [isAgeGateOpen, setAgeGateOpen] = useState(false);
 
   useEffect(() => {
+    // Load persisted progress data
+    const storedProgress = localStorage.getItem('progressData');
+    if (storedProgress) {
+      try {
+        setProgressData(JSON.parse(storedProgress));
+      } catch (e) {
+        console.error("Failed to parse progress data from localStorage", e);
+        localStorage.removeItem('progressData');
+      }
+    }
+    
     const storedAge = localStorage.getItem('userAge');
     if (storedAge) {
       setAgeState(parseInt(storedAge, 10));
-    } else {
-      // Don't open the age gate immediately, let protected routes handle login flow
-      // setAgeGateOpen(true);
     }
 
     const handleStorageChange = () => {
@@ -107,10 +105,9 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
   }
 
   const addSessionData = useCallback((sessionData: SessionData) => {
-    // 1. Update progress data
     setProgressData(prev => {
         const newData = [...prev, { date: `Day ${prev.length + 1}`, score: sessionData.score }];
-        // You might want to persist this to localStorage as well
+        localStorage.setItem('progressData', JSON.stringify(newData));
         return newData;
     });
 
