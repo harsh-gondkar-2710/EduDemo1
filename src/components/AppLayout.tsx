@@ -4,24 +4,28 @@
 import { usePathname } from 'next/navigation';
 import { Sidebar } from './ui/sidebar';
 import { Header } from './Header';
+import { cn } from '@/lib/utils';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLoginPage = pathname === '/login';
 
-  if (isLoginPage) {
-    return <main>{children}</main>;
-  }
-
   return (
     <div className="relative flex min-h-screen">
-      <Sidebar side="left" collapsible="icon" className="border-r hidden md:flex">
-        <Header />
-      </Sidebar>
-      <main className="flex-1 flex flex-col">
-        <div className="md:hidden">
+      {!isLoginPage && (
+        <Sidebar side="left" collapsible="icon" className="border-r hidden md:flex">
           <Header />
-        </div>
+        </Sidebar>
+      )}
+      <main className={cn(
+        "flex-1 flex flex-col",
+        isLoginPage && "items-center justify-center"
+      )}>
+        {!isLoginPage && (
+            <div className="md:hidden">
+                <Header />
+            </div>
+        )}
         {children}
       </main>
     </div>
