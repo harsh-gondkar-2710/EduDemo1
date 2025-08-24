@@ -11,8 +11,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Languages, Volume2, ArrowRightLeft } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-type LanguageTask = 'translate' | 'correct' | 'explain';
+type LanguageTask = 'translate' | 'correct_and_explain';
 const languages = ['English', 'Marathi', 'Hindi'];
 
 export function LanguageTutor() {
@@ -91,16 +92,12 @@ export function LanguageTutor() {
               disabled={isLoading}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-               <Select onValueChange={(value) => setTask(value as LanguageTask)} defaultValue={task}>
-                <SelectTrigger>
-                    <SelectValue placeholder="Select a task" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="translate">Translate</SelectItem>
-                    <SelectItem value="correct">Correct Grammar</SelectItem>
-                    <SelectItem value="explain">Explain Grammar</SelectItem>
-                </SelectContent>
-               </Select>
+               <Tabs onValueChange={(value) => setTask(value as LanguageTask)} defaultValue={task}>
+                <TabsList>
+                    <TabsTrigger value="translate">Translate</TabsTrigger>
+                    <TabsTrigger value="correct_and_explain">Correct & Explain</TabsTrigger>
+                </TabsList>
+               </Tabs>
                
                <div className='flex items-center gap-2'>
                     <Select onValueChange={setSourceLanguage} defaultValue={sourceLanguage} value={sourceLanguage}>
@@ -158,7 +155,7 @@ export function LanguageTutor() {
                     Result
                 </CardTitle>
             </CardHeader>
-            <CardContent className="prose dark:prose-invert">
+            <CardContent className="prose dark:prose-invert max-w-none">
                 <p className="text-lg">{result.processedText}</p>
                 {result.explanation && (
                     <Alert className="mt-4">

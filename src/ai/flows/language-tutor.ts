@@ -14,14 +14,13 @@ import { z } from 'genkit';
 const LanguageTutorInputSchema = z.object({
   text: z.string().describe('The input text from the user.'),
   task: z
-    .enum(['translate', 'correct', 'explain'])
+    .enum(['translate', 'correct_and_explain'])
     .describe(
-      'The language task to perform: translate, correct grammar, or explain grammar.'
+      'The language task to perform: translate the text, or correct it and explain the grammatical changes.'
     ),
   sourceLanguage: z
     .string()
-    .optional()
-    .describe('The source language for translation (e.g., "English").'),
+    .describe('The source language for the task (e.g., "English").'),
   targetLanguage: z
     .string()
     .optional()
@@ -52,13 +51,12 @@ const languageTutorPrompt = ai.definePrompt({
   prompt: `You are an expert language tutor. Perform the requested task on the user's text.
 
   Task: {{{task}}}
-  {{#if sourceLanguage}}Source Language: {{{sourceLanguage}}}{{/if}}
+  Source Language: {{{sourceLanguage}}}
   {{#if targetLanguage}}Target Language: {{{targetLanguage}}}{{/if}}
   User's Text: "{{{text}}}"
 
   - If the task is 'translate', translate the text from the source language to the target language.
-  - If the task is 'correct', correct any grammatical errors in the text and provide the corrected version in the 'processedText' field. Also, provide a brief explanation of the correction in the 'explanation' field. The source text is in {{{sourceLanguage}}}.
-  - If the task is 'explain', explain the grammatical concept demonstrated in the text. Put the explanation in the 'explanation' field and return the original text in the 'processedText' field. The source text is in {{{sourceLanguage}}}.
+  - If the task is 'correct_and_explain', correct any grammatical errors in the text from the source language. Provide the corrected version in the 'processedText' field. Then, provide a clear and detailed explanation of all the corrections you made in the 'explanation' field.
 
   Keep your responses concise and clear.
   `,
