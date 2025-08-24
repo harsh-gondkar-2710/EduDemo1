@@ -57,25 +57,12 @@ export function PersonalisedTutor() {
     }
   };
 
-  const handleRefreshVideos = async () => {
-    if (!topic) return;
-    setIsRefreshingVideos(true);
-    try {
-      const result = await generateLessonPlan({ topic: `${topic} (in the context of ${subject})` });
-      setLessonPlan(prev => prev ? { ...prev, youtubeVideoIds: result.youtubeVideoIds } : result);
-      setCurrentVideoIndex(0); // Reset to the first video in the new list
-      toast({ title: "Videos refreshed!", description: "Here's a new set of videos for you." });
-    } catch (error) {
-      console.error('Failed to refresh videos:', error);
-      toast({
-        variant: 'destructive',
-        title: 'AI Error',
-        description: 'Could not fetch new videos at this time.',
-      });
-    } finally {
-      setIsRefreshingVideos(false);
+  const handleCycleVideo = () => {
+    if (lessonPlan && lessonPlan.youtubeVideoIds.length > 0) {
+        setCurrentVideoIndex(prevIndex => (prevIndex + 1) % lessonPlan.youtubeVideoIds.length);
     }
-  }
+  };
+
 
   const handleCheckAnswer = (e: FormEvent) => {
     e.preventDefault();
@@ -242,8 +229,8 @@ export function PersonalisedTutor() {
                             Practice
                         </Button>
                     </div>
-                    <Button onClick={handleRefreshVideos} disabled={isRefreshingVideos} variant="ghost">
-                        <RefreshCw className={`mr-2 ${isRefreshingVideos ? 'animate-spin' : ''}`} />
+                    <Button onClick={handleCycleVideo} variant="ghost">
+                        <RefreshCw className="mr-2" />
                         Refresh
                     </Button>
                 </CardFooter>
@@ -295,5 +282,3 @@ export function PersonalisedTutor() {
     </div>
   );
 }
-
-    
