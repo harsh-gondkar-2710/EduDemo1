@@ -49,7 +49,7 @@ const careerRoadmapPrompt = ai.definePrompt({
   
   For each step, provide:
   1.  'skill': A clear and concise name for the skill or technology (e.g., "Learn HTML & CSS", "Master React.js", "Understand Data Structures").
-  2.  'description': A detailed paragraph explaining what the skill is, why it's crucial for a "{{{jobRole}}}", and what a beginner should focus on. Also, recommend 1-2 well-known, popular online courses for this skill from platforms like Coursera, Udemy, or edX (e.g., "The Complete Web Development Bootcamp by Angela Yu on Udemy" or "Google Data Analytics Professional Certificate on Coursera").
+  2.  'description': A detailed paragraph explaining what the skill is, why it's crucial for a "{{{jobRole}}}", and what a beginner should focus on. You MUST recommend 1-2 specific and well-known online courses for this skill by name, from popular platforms like Coursera, Udemy, or edX (e.g., "The Complete Web Development Bootcamp by Angela Yu on Udemy" or "Google Data Analytics Professional Certificate on Coursera").
 
   The roadmap should be practical and actionable for a beginner. Ensure the final output is a JSON object matching the provided schema.
   `,
