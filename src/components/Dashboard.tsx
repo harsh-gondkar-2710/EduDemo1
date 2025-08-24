@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart, Cell } from 'recharts';
 import { TrendingUp, Award, Bot, ScanSearch, PencilRuler, Map, Goal, Lock, Star } from 'lucide-react';
 import { usePerformance } from '@/hooks/use-performance';
 import { AgeGate } from './AgeGate';
@@ -14,6 +14,8 @@ import { Badge } from './ui/badge';
 
 const chartConfig: ChartConfig = {
   score: { label: 'Score', color: 'hsl(var(--primary))' },
+  completed: { label: 'Completed', color: 'hsl(var(--primary))' },
+  remaining: { label: 'Remaining', color: 'hsl(var(--muted))' },
 };
 
 const appFeatures = [
@@ -40,14 +42,13 @@ export function Dashboard() {
     setQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
   }, []);
 
-  const lastSessionProgress = useMemo(() => {
-    if (progressData.length < 2) return 0;
-    const lastScore = progressData[progressData.length - 1].score;
-    const secondLastScore = progressData[progressData.length - 2].score;
-    if (secondLastScore === 0 && lastScore > 0) return 100;
-    if (secondLastScore === 0) return 0;
-    return Math.round(((lastScore - secondLastScore) / secondLastScore) * 100);
-  }, [progressData]);
+  const overallProgressData = useMemo(() => {
+    const roundedProgress = Math.round(overallProgress);
+    return [
+      { name: 'completed', value: roundedProgress, fill: 'hsl(var(--primary))' },
+      { name: 'remaining', value: 100 - roundedProgress, fill: 'hsl(var(--muted))' }
+    ]
+  }, [overallProgress]);
   
   const allBadges = useMemo(() => [
     { name: 'High Achiever I', description: 'Overall score > 80%', earned: overallProgress > 80, icon: Star },
@@ -73,16 +74,47 @@ export function Dashboard() {
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overall Progress</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Math.round(overallProgress)}%</div>
-            <p className="text-xs text-muted-foreground">
-                {lastSessionProgress >= 0 ? `+${lastSessionProgress}` : lastSessionProgress}% from last session
-            </p>
-          </CardContent>
+            <CardHeader>
+                <CardTitle>Overall Progress</CardTitle>
+                <CardDescription>Your average score across all sessions.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center">
+                <ChartContainer
+                    config={chartConfig}
+                    className="mx-auto aspect-square h-[250px]"
+                >
+                    <PieChart>
+                        <ChartTooltip
+                            cursor={false}
+                            content={<ChartTooltipContent hideLabel />}
+                        />
+                        <Pie
+                            data={overallProgressData}
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius={60}
+                            strokeWidth={5}
+                        >
+                             <Cell
+                                key="completed"
+                                fill="var(--color-completed)"
+                                radius={[4, 4, 0, 0]}
+                              />
+                              <Cell
+                                key="remaining"
+                                fill="var(--color-remaining)"
+                                radius={[0, 0, 4, 4]}
+                              />
+                        </Pie>
+                    </PieChart>
+                </ChartContainer>
+            </CardContent>
+             <CardFooter className="flex-col gap-2 text-sm">
+                <div className="flex items-center gap-2 font-medium leading-none">
+                    You're at {Math.round(overallProgress)}% overall. Keep it up!
+                    <TrendingUp className="h-4 w-4" />
+                </div>
+            </CardFooter>
         </Card>
 
         <Card>
@@ -92,13 +124,12 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[250px] w-full">
-              <LineChart data={progressData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+              <BarChart data={progressData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                <YAxis />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Line type="monotone" dataKey="score" stroke="var(--color-score)" strokeWidth={2} dot={false} />
-              </LineChart>
+                <Bar dataKey="score" fill="var(--color-score)" radius={4} />
+              </BarChart>
             </ChartContainer>
           </CardContent>
         </Card>
