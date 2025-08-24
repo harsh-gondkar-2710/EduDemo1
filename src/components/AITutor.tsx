@@ -34,6 +34,7 @@ export function AITutor() {
   const [topic, setTopic] = useState('');
   const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingVideos, setIsLoadingVideos] = useState(false);
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
@@ -47,13 +48,18 @@ export function AITutor() {
   const fetchVideos = async (searchTopic: string) => {
     setIsLoadingVideos(true);
     setVideos([]);
+    setSelectedVideoId(null);
     try {
         const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(searchTopic)}`);
         if (!response.ok) {
             throw new Error('Failed to fetch videos');
         }
         const data = await response.json();
-        setVideos(data.items || []);
+        const videoItems = data.items || [];
+        setVideos(videoItems);
+        if(videoItems.length > 0) {
+            setSelectedVideoId(videoItems[0].id.videoId);
+        }
     } catch (error) {
         console.error('Failed to fetch YouTube videos:', error);
         toast({
@@ -73,6 +79,7 @@ export function AITutor() {
     setIsLoading(true);
     setLessonPlan(null);
     setVideos([]);
+    setSelectedVideoId(null);
     setFeedback(null);
     setCurrentProblemIndex(0);
     setUserAnswer('');
@@ -285,7 +292,7 @@ export function AITutor() {
               <CardContent className="space-y-4">
                 {isLoadingVideos && (
                   <>
-                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="aspect-video w-full" />
                     <Skeleton className="h-20 w-full" />
                     <Skeleton className="h-20 w-full" />
                   </>
@@ -293,28 +300,40 @@ export function AITutor() {
                 {!isLoadingVideos && videos.length === 0 && (
                   <p className="text-sm text-muted-foreground">No videos found for this topic.</p>
                 )}
-                {videos.map((video) => (
-                  <Link
-                    key={video.id.videoId}
-                    href={`https://www.youtube.com/watch?v=${video.id.videoId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block group"
-                  >
-                    <div className="flex items-center gap-4 p-2 rounded-md hover:bg-secondary">
-                      <Image
-                        src={video.snippet.thumbnails.default.url}
-                        alt={video.snippet.title}
-                        width={120}
-                        height={90}
-                        className="rounded-md"
-                      />
-                      <p className="text-sm font-medium group-hover:text-primary leading-tight">
-                        {video.snippet.title}
-                      </p>
+                {selectedVideoId && (
+                    <div className="aspect-video w-full mb-4">
+                        <iframe
+                            className="w-full h-full rounded-md"
+                            src={`https://www.youtube.com/embed/${selectedVideoId}`}
+                            title="YouTube video player"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        ></iframe>
                     </div>
-                  </Link>
-                ))}
+                )}
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {videos.map((video) => (
+                    <div
+                        key={video.id.videoId}
+                        onClick={() => setSelectedVideoId(video.id.videoId)}
+                        className="block group cursor-pointer"
+                    >
+                        <div className={`flex items-center gap-4 p-2 rounded-md hover:bg-secondary ${selectedVideoId === video.id.videoId ? 'bg-secondary' : ''}`}>
+                        <Image
+                            src={video.snippet.thumbnails.default.url}
+                            alt={video.snippet.title}
+                            width={120}
+                            height={90}
+                            className="rounded-md"
+                        />
+                        <p className="text-sm font-medium group-hover:text-primary leading-tight">
+                            {video.snippet.title}
+                        </p>
+                        </div>
+                    </div>
+                    ))}
+                </div>
               </CardContent>
             </Card>
           </div>
