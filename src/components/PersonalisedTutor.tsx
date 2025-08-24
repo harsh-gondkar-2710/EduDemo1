@@ -216,6 +216,20 @@ export function PersonalisedTutor() {
                                     allowFullScreen
                                 ></iframe>
                             </div>
+                            {videos.length > 1 && (
+                                <>
+                                    <h4 className="text-md font-semibold mt-4">Additional Videos:</h4>
+                                    <ul className="list-disc pl-5">
+                                        {videos.slice(1).map((video) => (
+                                            <li key={video.id.videoId}>
+                                                <a href={`https://www.youtube.com/watch?v=${video.id.videoId}`} target="_blank" rel="noopener noreferrer">
+                                                    {video.snippet.title}
+                                                </a>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </>
+                            )}
                         </>
                     )}
                 </CardContent>
