@@ -232,22 +232,9 @@ export function PersonalisedTutor() {
                                 <div className="w-full h-full rounded-lg bg-muted flex flex-col items-center justify-center text-center p-4">
                                     <AlertCircle className="h-8 w-8 text-destructive mb-2" />
                                     <p className="font-semibold">No YouTube Videos Available</p>
-                                    <p className="text-sm text-muted-foreground mb-4">
-                                      If the video is unavailable, watch an AI-generated video.
+                                    <p className="text-sm text-muted-foreground">
+                                      Try generating an AI video instead.
                                     </p>
-                                    <Button onClick={handleGenerateAiVideo} disabled={isGeneratingVideo}>
-                                        {isGeneratingVideo ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                Generating...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Sparkles className="mr-2" />
-                                                Watch AI-generated video
-                                            </>
-                                        )}
-                                    </Button>
                                 </div>
                             ) : (
                                 <iframe
@@ -276,20 +263,35 @@ export function PersonalisedTutor() {
                          </div>
                     )}
                 </CardContent>
-                <CardFooter className='gap-4 justify-between'>
-                    <div>
+                <CardFooter className='gap-4 justify-between flex-wrap'>
+                    <div className="flex gap-2">
                         <Button onClick={() => setTutorView('lesson')} variant="outline">Back to Lesson</Button>
-                        <Button onClick={resetPractice} variant="secondary" className="ml-2">
+                        <Button onClick={resetPractice} variant="secondary">
                            <BrainCircuit className="mr-2" />
                             Practice
                         </Button>
                     </div>
-                    {currentVideoId && !aiVideoUrl && (
-                        <Button onClick={handleNextVideo} variant="ghost" disabled={videoIds.length <= 1}>
-                            <RefreshCw className="mr-2" />
-                            Next Video
+                    <div className="flex gap-2">
+                        {currentVideoId && !aiVideoUrl && (
+                            <Button onClick={handleNextVideo} variant="ghost" disabled={videoIds.length <= 1}>
+                                <RefreshCw className="mr-2" />
+                                Next Video
+                            </Button>
+                        )}
+                        <Button onClick={handleGenerateAiVideo} disabled={isGeneratingVideo}>
+                            {isGeneratingVideo ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Generating...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="mr-2" />
+                                    Watch AI-generated video
+                                </>
+                            )}
                         </Button>
-                    )}
+                    </div>
                 </CardFooter>
             </Card>
           )}
