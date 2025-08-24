@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -31,9 +31,11 @@ export function Login() {
     user,
   } = useAuth();
 
-  if (user) {
-    router.push('/');
-  }
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
 
   const handleAuthAction = async (
     action: 'signIn' | 'signUp',
