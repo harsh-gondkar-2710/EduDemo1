@@ -6,27 +6,30 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
+import { CheckCircle2, XCircle, Lightbulb, BookCopy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { adjustDifficulty } from '@/ai/flows/dynamically-adjust-difficulty';
-import type { MathQuestion, Operation } from '@/lib/math';
-import { generateQuestion } from '@/lib/math';
+import { generatePracticeQuestion, type PracticeQuestion } from '@/ai/flows/generate-practice-question';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePerformance } from '@/hooks/use-performance';
 import { useRouter } from 'next/navigation';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { Label } from './ui/label';
 
 const TOTAL_QUESTIONS = 10;
+const SUBJECTS = ["Mathematics", "US History", "Biology", "General Knowledge"];
 
 type PerformanceRecord = {
   question: string;
   correct: boolean;
   timeTaken: number;
-  operation: Operation;
+  operation: string; // Using string for subject
 };
 
 export function PracticeSession() {
+  const [subject, setSubject] = useState<string | null>(null);
   const [difficulty, setDifficulty] = useState(3);
-  const [currentQuestion, setCurrentQuestion] = useState<MathQuestion | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<PracticeQuestion | null>(null);
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ type: 'correct' | 'incorrect'; message: string } | null>(null);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
@@ -34,39 +37,51 @@ export function PracticeSession() {
   const [isSessionOver, setIsSessionOver] = useState(false);
   const [performanceHistory, setPerformanceHistory] = useState<PerformanceRecord[]>([]);
   const [startTime, setStartTime] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
   const { addSessionData } = usePerformance();
   const router = useRouter();
   
-  const startNewQuestion = (newDifficulty: number) => {
+  const startNewQuestion = async (newDifficulty: number) => {
+    if (!subject) return;
     setIsLoading(true);
-    setCurrentQuestion(generateQuestion(newDifficulty));
-    setStartTime(Date.now());
-    setIsLoading(false);
+    setFeedback(null);
+    setUserAnswer('');
+    try {
+        const question = await generatePracticeQuestion({ subject, difficulty: newDifficulty });
+        setCurrentQuestion(question);
+        setStartTime(Date.now());
+    } catch (error) {
+        console.error("Failed to generate question", error);
+        toast({
+            variant: "destructive",
+            title: "AI Error",
+            description: "Could not generate a new question. Please try again."
+        });
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   useEffect(() => {
-    startNewQuestion(difficulty);
-  }, []);
+    if (subject) {
+      startNewQuestion(difficulty);
+    }
+  }, [subject]);
 
   useEffect(() => {
-    if (isSessionOver) {
+    if (isSessionOver && subject) {
         addSessionData({
             score: (correctAnswers / TOTAL_QUESTIONS) * 100,
             performanceHistory
         });
-        // Redirect to dashboard or show summary
     }
-  }, [isSessionOver, correctAnswers, performanceHistory, addSessionData]);
+  }, [isSessionOver, correctAnswers, performanceHistory, addSessionData, subject]);
 
   const progressPercentage = useMemo(() => (questionsAnswered / TOTAL_QUESTIONS) * 100, [questionsAnswered]);
 
   const handleNextQuestion = async () => {
-    setFeedback(null);
-    setUserAnswer('');
-    
     if (questionsAnswered + 1 >= TOTAL_QUESTIONS) {
       setQuestionsAnswered(prev => prev + 1);
       setIsSessionOver(true);
@@ -75,47 +90,42 @@ export function PracticeSession() {
 
     setQuestionsAnswered(prev => prev + 1);
 
-    if (performanceHistory.length > 0) {
-      setIsLoading(true);
-      try {
-        const response = await adjustDifficulty({
-          studentId: 'student-123',
-          currentDifficulty: difficulty,
-          performanceData: JSON.stringify(performanceHistory.slice(-5)),
-        });
-        setDifficulty(response.newDifficulty);
-        startNewQuestion(response.newDifficulty);
-        toast({
-          title: "Difficulty Adjusted!",
-          description: `New level: ${response.newDifficulty}. ${response.reasoning}`,
-        });
-      } catch (error) {
-        console.error('Error adjusting difficulty:', error);
-        toast({
-          variant: 'destructive',
-          title: 'AI Error',
-          description: 'Could not adjust difficulty. Continuing at current level.',
-        });
-        startNewQuestion(difficulty);
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-        startNewQuestion(difficulty);
+    setIsLoading(true);
+    try {
+      const response = await adjustDifficulty({
+        studentId: 'student-123',
+        currentDifficulty: difficulty,
+        performanceData: JSON.stringify(performanceHistory.slice(-5)),
+      });
+      setDifficulty(response.newDifficulty);
+      await startNewQuestion(response.newDifficulty);
+      toast({
+        title: "Difficulty Adjusted!",
+        description: `New level: ${response.newDifficulty}. ${response.reasoning}`,
+      });
+    } catch (error) {
+      console.error('Error adjusting difficulty:', error);
+      toast({
+        variant: 'destructive',
+        title: 'AI Error',
+        description: 'Could not adjust difficulty. Continuing at current level.',
+      });
+      await startNewQuestion(difficulty);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (feedback || !currentQuestion) return;
+    if (feedback || !currentQuestion || !subject) return;
 
-    const answer = parseInt(userAnswer, 10);
-    const isCorrect = answer === currentQuestion.answer;
+    const isCorrect = userAnswer.trim().toLowerCase() === String(currentQuestion.answer).trim().toLowerCase();
 
     const timeTaken = (Date.now() - startTime) / 1000;
     setPerformanceHistory(prev => [
       ...prev,
-      { question: currentQuestion.questionText, correct: isCorrect, timeTaken, operation: currentQuestion.operation },
+      { question: currentQuestion.questionText, correct: isCorrect, timeTaken, operation: subject },
     ]);
 
     if (isCorrect) {
@@ -133,13 +143,37 @@ export function PracticeSession() {
     router.push('/');
   };
 
+  if (!subject) {
+    return (
+        <Card className="max-w-2xl mx-auto shadow-lg">
+            <CardHeader>
+                <CardTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
+                    <BookCopy className="text-primary"/>
+                    Choose a Subject
+                </CardTitle>
+                <CardDescription className="text-center">Select a topic to start your practice session.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <RadioGroup onValueChange={setSubject} className="space-y-2">
+                    {SUBJECTS.map((s) => (
+                        <div key={s} className="flex items-center space-x-2">
+                            <RadioGroupItem value={s} id={s} />
+                            <Label htmlFor={s} className="text-lg">{s}</Label>
+                        </div>
+                    ))}
+                </RadioGroup>
+            </CardContent>
+        </Card>
+    )
+  }
+
   if (isSessionOver) {
     return (
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle>Session Complete!</CardTitle>
           <CardDescription>
-            You've completed {TOTAL_QUESTIONS} questions. Here's how you did.
+            You've completed {TOTAL_QUESTIONS} questions on {subject}. Here's how you did.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -159,7 +193,7 @@ export function PracticeSession() {
   return (
     <Card className="max-w-2xl mx-auto shadow-lg">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center">Practice Session</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center">{subject} Practice</CardTitle>
         <CardDescription className="text-center">
           Question {questionsAnswered + 1} of {TOTAL_QUESTIONS}
         </CardDescription>
@@ -174,11 +208,11 @@ export function PracticeSession() {
         ) : (
           <>
             <div className="text-center pt-8">
-              <p className="text-3xl font-semibold text-primary">{currentQuestion.questionText}</p>
+              <p className="text-2xl font-semibold">{currentQuestion.questionText}</p>
             </div>
             <form onSubmit={handleSubmit} className="flex gap-2">
               <Input
-                type="number"
+                type="text"
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 placeholder="Your answer"
@@ -201,7 +235,7 @@ export function PracticeSession() {
                   {feedback.type === 'incorrect' && (
                     <div className="mt-2 flex items-center gap-2 text-sm">
                       <Lightbulb className="h-4 w-4 text-accent" />
-                      <span>Try to think about the operation being used.</span>
+                      <span>Keep trying! Every mistake is a learning opportunity.</span>
                     </div>
                   )}
                 </AlertDescription>
@@ -217,7 +251,7 @@ export function PracticeSession() {
           disabled={!feedback || isLoading}
           variant="secondary"
         >
-          {isLoading ? "Adjusting difficulty..." : "Next Question"}
+          {isLoading ? "Generating Question..." : "Next Question"}
         </Button>
       </CardFooter>
     </Card>
