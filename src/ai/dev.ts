@@ -10,4 +10,5 @@ import '@/ai/flows/grade-essay.ts';
 import '@/ai/flows/solve-problem.ts';
 import '@/ai/flows/generate-video.ts';
 import '@/ai/flows/generate-career-roadmap.ts';
+import '@/ai/flows/recommend-courses.ts';
     
