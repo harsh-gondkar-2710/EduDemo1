@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { FirebaseError } from 'firebase/app';
+import { auth } from '@/lib/firebase';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -48,9 +49,6 @@ export default function SignupPage() {
       setIsLoading(false);
     }
   };
-  
-  // Need to import auth from firebase to use in login function
-  const { auth } = require('@/lib/firebase');
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
