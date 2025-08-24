@@ -10,11 +10,15 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type TutorView = 'lesson' | 'video' | 'practice';
 
+const subjects = ['General', 'Maths', 'Physics', 'Chemistry', 'Biology', 'History', 'Languages'];
+
 export function PersonalisedTutor() {
   const [topic, setTopic] = useState('');
+  const [subject, setSubject] = useState('General');
   const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
@@ -35,7 +39,8 @@ export function PersonalisedTutor() {
     setTutorView('lesson');
 
     try {
-      const result = await generateLessonPlan({ topic });
+      // The AI flow can be enhanced to take the subject for more context
+      const result = await generateLessonPlan({ topic: `${topic} (in the context of ${subject})` });
       setLessonPlan(result);
     } catch (error) {
       console.error('Failed to generate lesson plan:', error);
@@ -92,16 +97,27 @@ export function PersonalisedTutor() {
           <CardTitle>What would you like to learn?</CardTitle>
         </CardHeader>
         <form onSubmit={handleGeneratePlan}>
-          <CardContent>
-            <Input
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g., 'Pythagorean Theorem', 'The French Revolution', 'How Photosynthesis Works'"
-              disabled={isLoading}
-            />
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Select onValueChange={setSubject} defaultValue={subject}>
+                    <SelectTrigger className="md:col-span-1">
+                        <SelectValue placeholder="Select a subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {subjects.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+                <Input
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="e.g., 'Pythagorean Theorem' or 'The French Revolution'"
+                disabled={isLoading}
+                className="md:col-span-2"
+                />
+            </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || !topic}>
               {isLoading ? 'Generating Lesson...' : 'Generate Lesson'}
             </Button>
           </CardFooter>

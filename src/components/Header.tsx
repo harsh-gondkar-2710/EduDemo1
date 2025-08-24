@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BrainCircuit, Bot, Target, Languages, PenSquare, FlaskConical, Calculator, ScanSearch } from 'lucide-react';
+import { BrainCircuit, Bot, Target, Languages, PenSquare, ScanSearch, PencilRuler } from 'lucide-react';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 
 export function Header() {
@@ -16,8 +16,7 @@ export function Header() {
     { href: '/solver', label: 'Solver', icon: ScanSearch },
     { href: '/language', label: 'Language', icon: Languages },
     { href: '/essay-grading', label: 'Essay Grading', icon: PenSquare },
-    { href: '/sciences', label: 'Sciences Practice', icon: FlaskConical },
-    { href: '/maths', label: 'Maths Practice', icon: Calculator },
+    { href: '/practice', label: 'Practice', icon: PencilRuler },
   ];
 
   return (
