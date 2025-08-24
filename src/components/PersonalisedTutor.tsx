@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit, RefreshCw, AlertCircle, ExternalLink } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import ReactPlayer from 'react-player/youtube';
 
 type TutorView = 'lesson' | 'video' | 'practice';
 
@@ -29,6 +30,12 @@ export function PersonalisedTutor() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [videoError, setVideoError] = useState(false);
   const { toast } = useToast();
+  
+  // Add a state to track if the component has mounted on the client
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const handleGeneratePlan = async (e: FormEvent) => {
     e.preventDefault();
@@ -98,11 +105,19 @@ export function PersonalisedTutor() {
   }
 
   const handleVideoError = () => {
-    setVideoError(true);
+    if (lessonPlan && currentVideoIndex < lessonPlan.youtubeVideoIds.length - 1) {
+        // Try the next video if the current one fails
+        handleCycleVideo();
+    } else {
+        // If all videos fail, show the error state
+        setVideoError(true);
+    }
   };
 
   const currentVideoId = lessonPlan?.youtubeVideoIds[currentVideoIndex];
   const videoWatchUrl = currentVideoId ? `https://www.youtube.com/watch?v=${currentVideoId}` : '';
+  const videoEmbedUrl = currentVideoId ? `https://www.youtube.com/embed/${currentVideoId}` : '';
+
 
   return (
     <div className="space-y-8">
@@ -214,15 +229,15 @@ export function PersonalisedTutor() {
                                 </p>
                             </div>
                         ) : (
-                            <iframe
+                            hasMounted && <ReactPlayer
                                 key={currentVideoId}
-                                className="w-full h-full rounded-lg"
-                                src={`https://www.youtube.com/embed/${currentVideoId}`}
-                                title="YouTube video player"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
+                                url={videoEmbedUrl}
+                                width="100%"
+                                height="100%"
+                                controls={true}
                                 onError={handleVideoError}
-                            ></iframe>
+                                className="rounded-lg overflow-hidden"
+                            />
                         )}
                     </div>
                     {currentVideoId && (
