@@ -34,12 +34,20 @@ type TopicPerformanceData = {
     strength: number;
 }
 
+type Goal = {
+    id: number;
+    text: string;
+    completed: boolean;
+    deadline: string | null;
+  };
+
 interface PerformanceContextType {
   progressData: ProgressData[];
   topicPerformanceData: TopicPerformanceData[];
   overallProgress: number;
   strengths: string[];
   weaknesses: string[];
+  completedGoalsCount: number;
   age: number | null;
   setAge: (age: number) => void;
   isAgeGateOpen: boolean;
@@ -70,6 +78,7 @@ const initialTopicPerformanceData: TopicPerformanceData[] = [
 export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [progressData, setProgressData] = useState<ProgressData[]>(initialProgressData);
   const [topicPerformanceData, setTopicPerformanceData] = useState<TopicPerformanceData[]>(initialTopicPerformanceData);
+  const [completedGoalsCount, setCompletedGoalsCount] = useState(0);
   const [age, setAgeState] = useState<number | null>(null);
   const [isAgeGateOpen, setAgeGateOpen] = useState(false);
 
@@ -79,6 +88,16 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
       setAgeState(parseInt(storedAge, 10));
     } else {
       setAgeGateOpen(true);
+    }
+
+    const storedGoals = localStorage.getItem('studyGoals');
+    if (storedGoals) {
+        try {
+            const parsedGoals: Goal[] = JSON.parse(storedGoals);
+            setCompletedGoalsCount(parsedGoals.filter(g => g.completed).length);
+        } catch (e) {
+            console.error("Failed to parse study goals for dashboard", e);
+        }
     }
   }, []);
   
@@ -150,6 +169,7 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
     overallProgress,
     strengths,
     weaknesses,
+    completedGoalsCount,
     age,
     setAge,
     isAgeGateOpen,
