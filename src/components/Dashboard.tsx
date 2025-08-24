@@ -11,6 +11,7 @@ import { TrendingUp, Award, Bot, ScanSearch, PencilRuler, Map, Goal, Lock, Star 
 import { usePerformance } from '@/hooks/use-performance';
 import { AgeGate } from './AgeGate';
 import { Badge } from './ui/badge';
+import { useAuth } from '@/hooks/use-auth';
 
 const chartConfig: ChartConfig = {
   score: { label: 'Score', color: 'hsl(var(--primary))' },
@@ -37,6 +38,7 @@ const motivationalQuotes = [
 export function Dashboard() {
   const { progressData, overallProgress, completedGoalsCount, sessionCount } = usePerformance();
   const [quote, setQuote] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
     setQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
@@ -69,7 +71,7 @@ export function Dashboard() {
     <div className="space-y-8">
       <AgeGate />
       <div className="text-center">
-        <h1 className="text-4xl font-bold">Welcome, Learner!</h1>
+        <h1 className="text-4xl font-bold">Welcome, {user?.displayName || 'Learner'}!</h1>
         <p className="text-muted-foreground mt-2 italic">"{quote}"</p>
       </div>
 

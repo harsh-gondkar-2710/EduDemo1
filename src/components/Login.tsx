@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -48,11 +49,20 @@ export function Login() {
       } else if (action === 'signIn') {
         await signInWithEmail(email, password);
       } else {
-        await signUpWithEmail(email, password);
+        if (!username) {
+            toast({
+                variant: 'destructive',
+                title: 'Username Required',
+                description: 'Please enter a username to sign up.',
+            });
+            setLoading(false);
+            return;
+        }
+        await signUpWithEmail(email, password, username);
       }
       toast({
         title: 'Success!',
-        description: "You're now logged in.",
+        description: action === 'signIn' ? "You're now logged in." : "Your account has been created.",
       });
       router.push('/');
     } catch (error: any) {
@@ -132,6 +142,17 @@ export function Login() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username-signup">Username</Label>
+              <Input
+                id="username-signup"
+                type="text"
+                placeholder="your_username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={loading}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email-signup">Email</Label>
               <Input

@@ -17,6 +17,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   signOut,
+  updateProfile,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -25,7 +26,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signInWithEmail: (email: string, pass: string) => Promise<any>;
-  signUpWithEmail: (email: string, pass: string) => Promise<any>;
+  signUpWithEmail: (email: string, pass: string, displayName: string) => Promise<any>;
   signInWithGoogle: () => Promise<any>;
   logout: () => Promise<any>;
 }
@@ -50,8 +51,14 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     return signInWithEmailAndPassword(auth, email, pass);
   };
   
-  const signUpWithEmail = (email: string, pass: string) => {
-    return createUserWithEmailAndPassword(auth, email, pass);
+  const signUpWithEmail = async (email: string, pass: string, displayName: string) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+    if (userCredential.user) {
+      await updateProfile(userCredential.user, { displayName });
+      // Manually update the user state because onAuthStateChanged might not fire immediately
+      setUser({ ...userCredential.user, displayName });
+    }
+    return userCredential;
   };
 
   const signInWithGoogle = () => {
