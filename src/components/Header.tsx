@@ -3,8 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BrainCircuit, Book, Bot, Target, Languages } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { BrainCircuit, Book, Bot, Target, Languages, PenSquare, FlaskConical, Calculator } from 'lucide-react';
 import { Sidebar, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from '@/components/ui/sidebar';
 
 export function Header() {
@@ -12,9 +11,11 @@ export function Header() {
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: Target },
-    { href: '/practice', label: 'Practice', icon: Book },
     { href: '/tutor', label: 'AI Tutor', icon: Bot },
     { href: '/language', label: 'Language', icon: Languages },
+    { href: '/essay-grading', label: 'Essay Grading', icon: PenSquare },
+    { href: '/sciences', label: 'Sciences Practice', icon: FlaskConical },
+    { href: '/maths', label: 'Maths Practice', icon: Calculator },
   ];
 
   return (

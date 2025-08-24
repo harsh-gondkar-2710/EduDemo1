@@ -13,11 +13,8 @@ import { generatePracticeQuestion, type PracticeQuestion } from '@/ai/flows/gene
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePerformance } from '@/hooks/use-performance';
 import { useRouter } from 'next/navigation';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import { Label } from './ui/label';
 
 const TOTAL_QUESTIONS = 10;
-const SUBJECTS = ["Maths", "Indian History", "Social Studies", "GK", "Sciences"];
 
 type PerformanceRecord = {
   question: string;
@@ -26,8 +23,11 @@ type PerformanceRecord = {
   subject: string;
 };
 
-export function PracticeSession() {
-  const [subject, setSubject] = useState<string | null>(null);
+interface PracticeSessionProps {
+    subject: string;
+}
+
+export function PracticeSession({ subject }: PracticeSessionProps) {
   const [difficulty, setDifficulty] = useState(3);
   const [currentQuestion, setCurrentQuestion] = useState<PracticeQuestion | null>(null);
   const [userAnswer, setUserAnswer] = useState('');
@@ -148,30 +148,6 @@ export function PracticeSession() {
   const restartSession = () => {
     router.push('/');
   };
-
-  if (!subject) {
-    return (
-        <Card className="max-w-2xl mx-auto shadow-lg">
-            <CardHeader>
-                <CardTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
-                    <BookCopy className="text-primary"/>
-                    Choose a Subject
-                </CardTitle>
-                <CardDescription className="text-center">Select a topic to start your practice session.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <RadioGroup onValueChange={setSubject} className="space-y-2">
-                    {SUBJECTS.map((s) => (
-                        <div key={s} className="flex items-center space-x-2">
-                            <RadioGroupItem value={s} id={s} />
-                            <Label htmlFor={s} className="text-lg">{s}</Label>
-                        </div>
-                    ))}
-                </RadioGroup>
-            </CardContent>
-        </Card>
-    )
-  }
 
   if (isSessionOver) {
     return (
