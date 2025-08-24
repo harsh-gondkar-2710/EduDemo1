@@ -25,6 +25,7 @@ export function PersonalisedTutor() {
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; explanation: string } | null>(null);
   const [tutorView, setTutorView] = useState<TutorView>('lesson');
+  const [videoError, setVideoError] = useState(false);
   const { toast } = useToast();
 
   const handleGeneratePlan = async (e: FormEvent) => {
@@ -37,6 +38,7 @@ export function PersonalisedTutor() {
     setCurrentProblemIndex(0);
     setUserAnswer('');
     setTutorView('lesson');
+    setVideoError(false);
 
     try {
       // The AI flow can be enhanced to take the subject for more context
@@ -84,6 +86,8 @@ export function PersonalisedTutor() {
     setFeedback(null);
     setTutorView('practice');
   }
+
+  const currentVideoId = lessonPlan?.youtubeVideoIds[videoError ? 1 : 0] ?? '';
 
   return (
     <div className="space-y-8">
@@ -183,11 +187,17 @@ export function PersonalisedTutor() {
                 <CardContent>
                     <div className="aspect-video">
                         <iframe
+                            key={currentVideoId}
                             className="w-full h-full rounded-lg"
-                            src={`https://www.youtube.com/embed/${lessonPlan.youtubeVideoId}`}
+                            src={`https://www.youtube.com/embed/${currentVideoId}`}
                             title="YouTube video player"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
+                            onError={() => {
+                                if (!videoError && lessonPlan.youtubeVideoIds.length > 1) {
+                                    setVideoError(true);
+                                }
+                            }}
                         ></iframe>
                     </div>
                 </CardContent>
