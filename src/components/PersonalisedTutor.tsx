@@ -12,7 +12,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit, RefreshCw, AlertCircle, ExternalLink } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ReactPlayer from 'react-player/youtube';
 
 type TutorView = 'lesson' | 'video' | 'practice';
 
@@ -27,15 +26,8 @@ export function PersonalisedTutor() {
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; explanation: string } | null>(null);
   const [tutorView, setTutorView] = useState<TutorView>('lesson');
-  const [videoError, setVideoError] = useState(false);
   const [videoIds, setVideoIds] = useState<string[]>([]);
   const { toast } = useToast();
-  
-  // Add a state to track if the component has mounted on the client
-  const [hasMounted, setHasMounted] = useState(false);
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
 
   const handleGeneratePlan = async (e: FormEvent) => {
     e.preventDefault();
@@ -47,11 +39,9 @@ export function PersonalisedTutor() {
     setCurrentProblemIndex(0);
     setUserAnswer('');
     setTutorView('lesson');
-    setVideoError(false);
     setVideoIds([]);
 
     try {
-      // The AI flow can be enhanced to take the subject for more context
       const result = await generateLessonPlan({ topic: `${topic} (in the context of ${subject})` });
       setLessonPlan(result);
       if (result.youtubeVideoIds) {
@@ -71,14 +61,8 @@ export function PersonalisedTutor() {
 
   const handleNextVideo = () => {
     if (videoIds.length > 1) {
-        setVideoError(false);
         // Remove the first video and cycle to the next one.
         setVideoIds(prevIds => prevIds.slice(1));
-    } else {
-        toast({
-            title: "Last Video",
-            description: "You've seen all the available videos for this topic."
-        });
     }
   };
 
@@ -113,16 +97,6 @@ export function PersonalisedTutor() {
     setFeedback(null);
     setTutorView('practice');
   }
-
-  const handleVideoError = () => {
-    if (videoIds.length > 1) {
-        // Remove the problematic video and try the next one.
-        setVideoIds(prev => prev.slice(1));
-    } else {
-        // If it was the last video, show the error state.
-        setVideoError(true);
-    }
-  };
 
   const currentVideoId = videoIds.length > 0 ? videoIds[0] : null;
   const videoWatchUrl = currentVideoId ? `https://www.youtube.com/watch?v=${currentVideoId}` : '';
@@ -227,36 +201,37 @@ export function PersonalisedTutor() {
                 <CardContent>
                     <div className="aspect-video">
                         {!currentVideoId ? (
-                            <div className="w-full h-full rounded-lg bg-muted flex items-center justify-center">
-                                <p>No videos available for this topic.</p>
-                            </div>
-                        ) : videoError ? (
-                            <div className="w-full h-full rounded-lg bg-muted flex flex-col items-center justify-center text-center p-4">
+                             <div className="w-full h-full rounded-lg bg-muted flex flex-col items-center justify-center text-center p-4">
                                 <AlertCircle className="h-8 w-8 text-destructive mb-2" />
-                                <p className="font-semibold">Video Unavailable</p>
+                                <p className="font-semibold">No Videos Available</p>
                                 <p className="text-sm text-muted-foreground">
-                                  This video can't be embedded.
+                                  Try a different topic to find videos.
                                 </p>
                             </div>
                         ) : (
-                            hasMounted && <ReactPlayer
+                            <iframe
                                 key={currentVideoId}
-                                url={videoEmbedUrl}
-                                width="100%"
-                                height="100%"
-                                controls={true}
-                                onError={handleVideoError}
-                                className="rounded-lg overflow-hidden"
-                            />
+                                className="w-full h-full rounded-lg"
+                                src={videoEmbedUrl}
+                                title="YouTube video player"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            ></iframe>
                         )}
                     </div>
                     {currentVideoId && (
-                         <Button asChild variant="link" className="mt-2 -ml-4">
-                            <Link href={videoWatchUrl} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="mr-2 h-4 w-4" />
-                                Watch on YouTube
-                            </Link>
-                        </Button>
+                         <div className='flex items-center gap-2 mt-2'>
+                            <AlertCircle className='h-4 w-4 text-muted-foreground' />
+                            <p className='text-sm text-muted-foreground'>
+                                If the video is unavailable,
+                                <Button asChild variant="link" className="p-1">
+                                    <Link href={videoWatchUrl} target="_blank" rel="noopener noreferrer">
+                                        watch it on YouTube
+                                    </Link>
+                                </Button>
+                                .
+                            </p>
+                         </div>
                     )}
                 </CardContent>
                 <CardFooter className='gap-4 justify-between'>
@@ -267,12 +242,10 @@ export function PersonalisedTutor() {
                             Practice
                         </Button>
                     </div>
-                    {lessonPlan.youtubeVideoIds.length > 0 && (
-                      <Button onClick={handleNextVideo} variant="ghost" disabled={videoIds.length <= 1}>
-                          <RefreshCw className="mr-2" />
-                          Next Video
-                      </Button>
-                    )}
+                    <Button onClick={handleNextVideo} variant="ghost" disabled={videoIds.length <= 1}>
+                        <RefreshCw className="mr-2" />
+                        Next Video
+                    </Button>
                 </CardFooter>
             </Card>
           )}
