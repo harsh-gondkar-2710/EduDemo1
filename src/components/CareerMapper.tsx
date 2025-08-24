@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Award, Briefcase, Map, Search, Sparkles, BookOpen } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
+import { useRouter } from 'next/navigation';
 
 export function CareerMapper() {
   const [jobRole, setJobRole] = useState('');
@@ -45,10 +45,6 @@ export function CareerMapper() {
   const handleFormSubmit = (e: FormEvent) => {
     e.preventDefault();
     handleGenerateRoadmap(jobRole);
-  };
-  
-  const handleFindCourse = (courseTitle: string) => {
-    router.push(`/certifications?q=${encodeURIComponent(courseTitle)}`);
   };
   
   const handleAddToGoals = () => {
@@ -158,8 +154,10 @@ export function CareerMapper() {
                                         {course.title}
                                     </CardTitle>
                                     <CardDescription className="mt-1">by {course.provider}</CardDescription>
-                                    <Button size="sm" variant="link" className="px-0" onClick={() => handleFindCourse(course.title)}>
+                                    <Button asChild size="sm" variant="link" className="px-0">
+                                      <a href={`https://www.google.com/search?q=${encodeURIComponent(course.title + " " + course.provider)}`} target="_blank" rel="noopener noreferrer">
                                         Find this course
+                                      </a>
                                     </Button>
                                 </Card>
                             ))}
