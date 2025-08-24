@@ -38,6 +38,7 @@ const LessonPlanSchema = z.object({
       answer: z.string().describe('The correct answer to the practice question.'),
     })
   ).describe('A list of 2-3 practice problems for the user.'),
+  youtubeVideoId: z.string().describe('A relevant YouTube video ID for the topic. Just the ID, not the full URL.'),
 });
 export type LessonPlan = z.infer<typeof LessonPlanSchema>;
 
@@ -61,6 +62,7 @@ const lessonPlanPrompt = ai.definePrompt({
   3.  A list of key concepts, formulas, or rules.
   4.  One clear, step-by-step example problem and its solution.
   5.  Two or three practice problems for the student to solve, along with their answers.
+  6.  Find a relevant, high-quality, and concise educational YouTube video on the topic. Provide only the video ID (the string of characters after "v=" in the URL).
 
   Keep the language simple and encouraging. The goal is to make the topic understandable for a beginner.
   `,

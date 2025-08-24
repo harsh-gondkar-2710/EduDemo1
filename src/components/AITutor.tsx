@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { generateLessonPlan, type LessonPlan } from '@/ai/flows/generate-lesson-plan';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Book, CheckCircle2, Pencil } from 'lucide-react';
+import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+
+type TutorView = 'lesson' | 'video' | 'practice';
 
 export function AITutor() {
   const [topic, setTopic] = useState('');
@@ -18,6 +20,7 @@ export function AITutor() {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; explanation: string } | null>(null);
+  const [tutorView, setTutorView] = useState<TutorView>('lesson');
   const { toast } = useToast();
 
   const handleGeneratePlan = async (e: FormEvent) => {
@@ -29,11 +32,12 @@ export function AITutor() {
     setFeedback(null);
     setCurrentProblemIndex(0);
     setUserAnswer('');
+    setTutorView('lesson');
 
     try {
       const result = await generateLessonPlan({ topic });
       setLessonPlan(result);
-    } catch (error) {
+    } catch (error)
       console.error('Failed to generate lesson plan:', error);
       toast({
         variant: 'destructive',
@@ -65,7 +69,15 @@ export function AITutor() {
         setFeedback(null);
     } else {
         toast({ title: "Practice Complete!", description: "You've finished all the practice problems." });
+        setTutorView('lesson');
     }
+  }
+
+  const resetPractice = () => {
+    setCurrentProblemIndex(0);
+    setUserAnswer('');
+    setFeedback(null);
+    setTutorView('practice');
   }
 
   return (
@@ -111,7 +123,8 @@ export function AITutor() {
 
       {lessonPlan && (
         <>
-            <Card>
+          {tutorView === 'lesson' && (
+             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Book className="text-primary"/>
@@ -130,9 +143,49 @@ export function AITutor() {
                     <p>{lessonPlan.example.problem}</p>
                     <p><strong>Solution:</strong> {lessonPlan.example.solution}</p>
                 </CardContent>
+                <CardFooter className="gap-4">
+                    <Button onClick={() => setTutorView('video')}>
+                        <Youtube className="mr-2" />
+                        Watch an Explanation Video
+                    </Button>
+                    <Button onClick={resetPractice} variant="secondary">
+                       <BrainCircuit className="mr-2" />
+                        Practice
+                    </Button>
+                </CardFooter>
             </Card>
+          )}
 
-            {lessonPlan.practiceProblems.length > 0 && (
+          {tutorView === 'video' && (
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Youtube className="text-red-600" />
+                        Explanation Video
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="aspect-video">
+                        <iframe
+                            className="w-full h-full rounded-lg"
+                            src={`https://www.youtube.com/embed/${lessonPlan.youtubeVideoId}`}
+                            title="YouTube video player"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        ></iframe>
+                    </div>
+                </CardContent>
+                <CardFooter className='gap-4'>
+                    <Button onClick={() => setTutorView('lesson')} variant="outline">Back to Lesson</Button>
+                    <Button onClick={resetPractice} variant="secondary">
+                       <BrainCircuit className="mr-2" />
+                        Practice
+                    </Button>
+                </CardFooter>
+            </Card>
+          )}
+
+          {tutorView === 'practice' && lessonPlan.practiceProblems.length > 0 && (
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -159,7 +212,8 @@ export function AITutor() {
                                 </Alert>
                             )}
                         </CardContent>
-                        <CardFooter>
+                        <CardFooter className="justify-between">
+                            <Button type="button" onClick={() => setTutorView('lesson')} variant="outline">Back to Lesson</Button>
                             {!feedback ? (
                                 <Button type="submit">Check Answer</Button>
                             ) : (
