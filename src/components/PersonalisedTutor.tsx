@@ -26,10 +26,12 @@ type YouTubeVideo = {
 };
 
 const subjects = ['General', 'Maths', 'Physics', 'Chemistry', 'Biology', 'History', 'Languages'];
+const languages = ['English', 'Marathi', 'Hindi'];
 
 export function PersonalisedTutor() {
   const [topic, setTopic] = useState('');
   const [subject, setSubject] = useState('General');
+  const [language, setLanguage] = useState('English');
   const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [isFetchingVideos, setIsFetchingVideos] = useState(false);
@@ -79,7 +81,10 @@ export function PersonalisedTutor() {
     setTutorView('lesson');
 
     try {
-      const result = await generateLessonPlan({ topic: `${topic} (in the context of ${subject})` });
+      const result = await generateLessonPlan({ 
+        topic: `${topic} (in the context of ${subject})`,
+        language: language,
+       });
       setLessonPlan(result);
     } catch (error) {
       toast({
@@ -136,7 +141,7 @@ export function PersonalisedTutor() {
         </CardHeader>
         <form onSubmit={handleGeneratePlan}>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Select onValueChange={setSubject} defaultValue={subject}>
                     <SelectTrigger className="md:col-span-1">
                         <SelectValue placeholder="Select a subject" />
@@ -146,12 +151,20 @@ export function PersonalisedTutor() {
                     </SelectContent>
                 </Select>
                 <Input
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g., 'Pythagorean Theorem' or 'The French Revolution'"
-                disabled={isLoading}
-                className="md:col-span-2"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="e.g., 'Pythagorean Theorem' or 'The French Revolution'"
+                  disabled={isLoading}
+                  className="md:col-span-2"
                 />
+                <Select onValueChange={setLanguage} defaultValue={language}>
+                    <SelectTrigger className="md:col-span-1">
+                        <SelectValue placeholder="Select a language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {languages.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </div>
           </CardContent>
           <CardFooter>

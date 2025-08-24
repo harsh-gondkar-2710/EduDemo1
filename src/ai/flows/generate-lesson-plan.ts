@@ -13,6 +13,7 @@ import { z } from 'genkit';
 
 const GenerateLessonPlanInputSchema = z.object({
   topic: z.string().describe('The topic the user wants to learn about.'),
+  language: z.string().optional().describe('The language for the lesson plan.'),
 });
 export type GenerateLessonPlanInput = z.infer<typeof GenerateLessonPlanInputSchema>;
 
@@ -60,6 +61,7 @@ const lessonPlanPrompt = ai.definePrompt({
   prompt: `You are an expert tutor. Your task is to create a detailed and easy-to-understand lesson plan for a student who wants to learn about a specific topic.
 
   The topic is: {{{topic}}}
+  {{#if language}}The lesson should be in {{{language}}}.{{/if}}
 
   Please generate a lesson plan with the following components:
   1.  A clear title for the lesson.
