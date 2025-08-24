@@ -205,17 +205,17 @@ export function PersonalisedTutor() {
                         <>
                             <h3 className="text-lg font-semibold mt-6 flex items-center gap-2">
                                 <Youtube className="text-red-600" />
-                                Recommended Videos
+                                Recommended Video
                             </h3>
-                            <ul className="list-disc pl-5">
-                                {videos.map((video) => (
-                                    <li key={video.id.videoId}>
-                                        <Link href={`https://www.youtube.com/watch?v=${video.id.videoId}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                            {video.snippet.title}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
+                            <div className="aspect-video mt-2">
+                                <iframe
+                                    className="w-full h-full rounded-lg"
+                                    src={`https://www.youtube.com/embed/${videos[0].id.videoId}`}
+                                    title="YouTube video player"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                ></iframe>
+                            </div>
                         </>
                     )}
                 </CardContent>
