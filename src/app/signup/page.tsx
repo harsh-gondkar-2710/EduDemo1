@@ -76,4 +76,22 @@ export default function SignupPage() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.targe
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Creating account...' : 'Create Account'}
+            </Button>
+          </form>
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <Link href="/login" className="underline hover:text-primary">
+              Login
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
