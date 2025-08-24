@@ -38,10 +38,17 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
+      if (!user) {
+        // Redirect to welcome page if user is not logged in and not already on a public page
+        const publicPages = ['/login', '/signup', '/welcome'];
+        if (!publicPages.includes(window.location.pathname)) {
+          router.push('/welcome');
+        }
+      }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   const logout = async () => {
     await firebaseSignOut(auth);
