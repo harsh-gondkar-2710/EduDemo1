@@ -31,7 +31,7 @@ export type GeneratePracticeQuestionInput = z.infer<
 const PracticeQuestionSchema = z.object({
   questionText: z.string().describe('The text of the practice question.'),
   options: z.array(z.string()).length(4).describe('A list of 4 possible answers for the question.'),
-  correctAnswers: z.array(z.string()).describe('A list containing the correct answer(s) from the options.'),
+  correctAnswerIndices: z.array(z.number()).describe('A list containing the 0-based index/indices of the correct answer(s) from the options array.'),
   explanation: z.string().describe('A brief explanation of why the answer is correct.'),
 });
 export type PracticeQuestion = z.infer<typeof PracticeQuestionSchema>;
@@ -59,9 +59,9 @@ const practiceQuestionPrompt = ai.definePrompt({
   {{/each}}
   {{/if}}
 
-  Please generate one multiple-choice question with exactly 4 options.
+  Please generate one multiple-choice question with exactly 4 options in the 'options' array.
   The question should be clear and concise.
-  Indicate the correct answer(s) in the 'correctAnswers' array. There can be one or more correct answers.
+  Indicate the 0-based index (0, 1, 2, or 3) of the correct answer(s) in the 'correctAnswerIndices' array. There can be one or more correct answers.
   Provide a brief and clear explanation for the correct answer.
   `,
 });

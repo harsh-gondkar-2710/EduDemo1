@@ -31,7 +31,7 @@ interface PracticeSessionProps {
 export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
   const [difficulty, setDifficulty] = useState(3);
   const [currentQuestion, setCurrentQuestion] = useState<PracticeQuestion | null>(null);
-  const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
+  const [selectedAnswerIndices, setSelectedAnswerIndices] = useState<number[]>([]);
   const [feedback, setFeedback] = useState<{ type: 'correct' | 'incorrect'; message: string } | null>(null);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
@@ -48,7 +48,7 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
     if (!subject) return;
     setIsLoading(true);
     setFeedback(null);
-    setSelectedAnswers([]);
+    setSelectedAnswerIndices([]);
     try {
         const question = await generatePracticeQuestion({ 
             subject, 
@@ -123,32 +123,32 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
     }
   };
   
-  const handleAnswerSelect = (option: string) => {
+  const handleAnswerSelect = (index: number) => {
     if (feedback) return;
 
-    setSelectedAnswers(prev => {
+    setSelectedAnswerIndices(prev => {
         if (!currentQuestion) return [];
-        const isMultiSelect = currentQuestion.correctAnswers.length > 1;
+        const isMultiSelect = currentQuestion.correctAnswerIndices.length > 1;
         if(isMultiSelect) {
-            if(prev.includes(option)) {
-                return prev.filter(ans => ans !== option);
+            if(prev.includes(index)) {
+                return prev.filter(i => i !== index);
             } else {
-                return [...prev, option];
+                return [...prev, index];
             }
         } else {
-            return [option];
+            return [index];
         }
     });
   }
 
   const handleSubmit = () => {
-    if (feedback || !currentQuestion || !subject || selectedAnswers.length === 0) return;
+    if (feedback || !currentQuestion || !subject || selectedAnswerIndices.length === 0) return;
 
-    const correctAnswersSet = new Set(currentQuestion.correctAnswers.map(ans => ans.trim()));
-    const selectedAnswersSet = new Set(selectedAnswers.map(ans => ans.trim()));
+    const correctAnswersSet = new Set(currentQuestion.correctAnswerIndices);
+    const selectedAnswersSet = new Set(selectedAnswerIndices);
 
     const isCorrect = correctAnswersSet.size === selectedAnswersSet.size &&
-                      [...correctAnswersSet].every(ans => selectedAnswersSet.has(ans));
+                      [...correctAnswersSet].every(idx => selectedAnswersSet.has(idx));
     
     const timeTaken = (Date.now() - startTime) / 1000;
     setPerformanceHistory(prev => [
@@ -160,18 +160,19 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
       setFeedback({ type: 'correct', message: 'Great job! That is correct.' });
       setCorrectAnswers(prev => prev + 1);
     } else {
+      const correctOptionsText = currentQuestion.correctAnswerIndices.map(i => currentQuestion.options[i]).join(', ');
       setFeedback({
         type: 'incorrect',
-        message: `Not quite. The correct answer is: ${currentQuestion.correctAnswers.join(', ')}.`,
+        message: `Not quite. The correct answer is: ${correctOptionsText}.`,
       });
     }
   };
   
-  const getButtonVariant = (option: string) => {
-    if (!feedback) return selectedAnswers.includes(option) ? 'default' : 'outline';
+  const getButtonVariant = (index: number) => {
+    if (!feedback) return selectedAnswerIndices.includes(index) ? 'default' : 'outline';
     
-    const isCorrect = currentQuestion?.correctAnswers.includes(option);
-    const isSelected = selectedAnswers.includes(option);
+    const isCorrect = currentQuestion?.correctAnswerIndices.includes(index);
+    const isSelected = selectedAnswerIndices.includes(index);
 
     if (isCorrect) return 'default';
     if (isSelected && !isCorrect) return 'destructive';
@@ -231,15 +232,15 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
           <>
             <div className="text-center pt-4">
               <p className="text-xl font-semibold">{currentQuestion.questionText}</p>
-              {currentQuestion.correctAnswers.length > 1 && <p className="text-sm text-muted-foreground">(Select all that apply)</p>}
+              {currentQuestion.correctAnswerIndices.length > 1 && <p className="text-sm text-muted-foreground">(Select all that apply)</p>}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {currentQuestion.options.map((option, index) => (
                     <Button
                         key={index}
-                        variant={getButtonVariant(option)}
+                        variant={getButtonVariant(index)}
                         className="h-auto py-3 justify-start text-left whitespace-normal"
-                        onClick={() => handleAnswerSelect(option)}
+                        onClick={() => handleAnswerSelect(index)}
                         disabled={!!feedback}
                     >
                        <span className="font-bold mr-2">{String.fromCharCode(65 + index)}.</span>
@@ -270,7 +271,7 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
             <Button
                 onClick={handleSubmit}
                 className="w-full"
-                disabled={selectedAnswers.length === 0 || isLoading}
+                disabled={selectedAnswerIndices.length === 0 || isLoading}
             >
                 Submit
             </Button>
