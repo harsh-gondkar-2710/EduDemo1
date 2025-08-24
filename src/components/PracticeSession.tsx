@@ -144,8 +144,9 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
   const handleSubmit = () => {
     if (feedback || !currentQuestion || !subject || selectedAnswers.length === 0) return;
 
-    const sortedSelected = [...selectedAnswers].sort();
-    const sortedCorrect = [...currentQuestion.correctAnswers].sort();
+    // Normalize and sort both selected and correct answers for reliable comparison
+    const sortedSelected = [...selectedAnswers].map(s => s.trim().toLowerCase()).sort();
+    const sortedCorrect = [...currentQuestion.correctAnswers].map(s => s.trim().toLowerCase()).sort();
     const isCorrect = JSON.stringify(sortedSelected) === JSON.stringify(sortedCorrect);
 
     const timeTaken = (Date.now() - startTime) / 1000;
