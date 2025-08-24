@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BrainCircuit, Bot, Target, Languages, PenSquare, ScanSearch, PencilRuler, Map, Goal } from 'lucide-react';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Header() {
   const pathname = usePathname();
@@ -31,6 +32,7 @@ export function Header() {
             <span className={`text-lg font-bold ${state === 'collapsed' && 'md:hidden'}`}>EduSmart</span>
           </Link>
         </div>
+        <ThemeToggle />
       </header>
       <div className='flex-1 overflow-y-auto'>
         <SidebarMenu>
