@@ -62,7 +62,7 @@ const lessonPlanPrompt = ai.definePrompt({
   3.  A list of key concepts, formulas, or rules.
   4.  One clear, step-by-step example problem and its solution.
   5.  Two or three practice problems for the student to solve, along with their answers.
-  6.  Find four of the most relevant, high-quality, and concise educational YouTube videos that are directly related to the specified topic. Provide only the video IDs (the string of characters after "v=" in the URL). Ensure the videos are from a reputable educational channel. Order them by relevance.
+  6.  Search YouTube using the topic as keywords. Find four of the most relevant, high-quality, and concise educational videos where the keywords are present in the video title. Provide only the video IDs (the string of characters after "v=" in the URL). Ensure the videos are from a reputable educational channel. Order them by relevance.
 
   Keep the language simple and encouraging. The goal is to make the topic understandable for a beginner.
   `,
