@@ -38,7 +38,7 @@ const LessonPlanSchema = z.object({
       answer: z.string().describe('The correct answer to the practice question.'),
     })
   ).describe('A list of 2-3 practice problems for the user.'),
-  youtubeVideoIds: z.array(z.string()).describe('A list of 4 relevant YouTube video IDs for the topic. Just the IDs, not the full URLs. Order them by relevance.'),
+  youtubeVideoIds: z.array(z.string()).describe('A list of 4 relevant YouTube video IDs for the topic. Just the IDs, not the full URLs. The ID is the string of characters that comes after "v=" in a YouTube URL. It should be an 11-character alphanumeric string. Order them by relevance.'),
 });
 export type LessonPlan = z.infer<typeof LessonPlanSchema>;
 
@@ -62,7 +62,7 @@ const lessonPlanPrompt = ai.definePrompt({
   3.  A list of key concepts, formulas, or rules.
   4.  One clear, step-by-step example problem and its solution.
   5.  Two or three practice problems for the student to solve, along with their answers.
-  6.  Search YouTube using the topic as keywords. Find four of the most relevant, high-quality, and concise educational videos where the keywords are present in the video title. Provide only the video IDs (the string of characters after "v=" in the URL). Ensure the videos are from a reputable educational channel. Order them by relevance.
+  6.  Search YouTube using the topic as keywords. Find four of the most relevant, high-quality, and concise educational videos where the keywords are present in the video title. Provide only the video IDs (the string of characters after "v=" in the URL). Ensure the videos are from a reputable educational channel. The ID must be an 11-character alphanumeric string. Order them by relevance.
 
   Keep the language simple and encouraging. The goal is to make the topic understandable for a beginner.
   `,
