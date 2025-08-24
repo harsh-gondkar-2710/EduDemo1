@@ -7,14 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { generateLessonPlan, type LessonPlan } from '@/ai/flows/generate-lesson-plan';
-import { generateVideo } from '@/ai/flows/generate-video';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit, RefreshCw, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
+import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-type TutorView = 'lesson' | 'video' | 'practice';
+type TutorView = 'lesson' | 'practice';
 
 const subjects = ['General', 'Maths', 'Physics', 'Chemistry', 'Biology', 'History', 'Languages'];
 
@@ -27,9 +26,6 @@ export function PersonalisedTutor() {
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; explanation: string } | null>(null);
   const [tutorView, setTutorView] = useState<TutorView>('lesson');
-  const [videoIds, setVideoIds] = useState<string[]>([]);
-  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
-  const [aiVideoUrl, setAiVideoUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleGeneratePlan = async (e: FormEvent) => {
@@ -42,18 +38,11 @@ export function PersonalisedTutor() {
     setCurrentProblemIndex(0);
     setUserAnswer('');
     setTutorView('lesson');
-    setVideoIds([]);
-    setAiVideoUrl(null);
 
     try {
       const result = await generateLessonPlan({ topic: `${topic} (in the context of ${subject})` });
       setLessonPlan(result);
-      if (result.youtubeVideoIds && result.youtubeVideoIds.length > 0) {
-        setVideoIds(result.youtubeVideoIds);
-      }
-    } catch (error) {
-      console.error('Failed to generate lesson plan:', error);
-      toast({
+    } catch (error)      toast({
         variant: 'destructive',
         title: 'AI Error',
         description: 'Could not generate a lesson plan for this topic.',
@@ -63,33 +52,6 @@ export function PersonalisedTutor() {
     }
   };
   
-  const handleGenerateAiVideo = async () => {
-    if (!lessonPlan) return;
-    setIsGeneratingVideo(true);
-    setAiVideoUrl(null);
-    try {
-      const result = await generateVideo({ topic: lessonPlan.title });
-      setAiVideoUrl(result.videoDataUri);
-    } catch (error) {
-      console.error('Failed to generate AI video:', error);
-      toast({
-        variant: 'destructive',
-        title: 'AI Video Error',
-        description: 'Could not generate a video at this time. Please try again later.',
-      });
-    } finally {
-        setIsGeneratingVideo(false);
-    }
-  }
-
-  const handleNextVideo = () => {
-    if (videoIds.length > 1) {
-        const remainingVideos = videoIds.slice(1);
-        setVideoIds(remainingVideos);
-    }
-  };
-
-
   const handleCheckAnswer = (e: FormEvent) => {
     e.preventDefault();
     if (!lessonPlan) return;
@@ -120,11 +82,6 @@ export function PersonalisedTutor() {
     setFeedback(null);
     setTutorView('practice');
   }
-
-  const currentVideoId = videoIds.length > 0 ? videoIds[0] : null;
-  const videoWatchUrl = currentVideoId ? `https://www.youtube.com/watch?v=${currentVideoId}` : '';
-  const videoEmbedUrl = currentVideoId ? `https://www.youtube.com/embed/${currentVideoId}` : '';
-
 
   return (
     <div className="space-y-8">
@@ -188,7 +145,7 @@ export function PersonalisedTutor() {
                         {lessonPlan.title}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="prose dark:prose-invert">
+                <CardContent className="prose dark:prose-invert max-w-none">
                     <p>{lessonPlan.introduction}</p>
                     <h3 className="text-lg font-semibold mt-4">Key Concepts</h3>
                     <ul className="list-disc pl-5">
@@ -199,99 +156,30 @@ export function PersonalisedTutor() {
                     <h3 className="text-lg font-semibold mt-4">Example</h3>
                     <p>{lessonPlan.example.problem}</p>
                     <p><strong>Solution:</strong> {lessonPlan.example.solution}</p>
+
+                    {lessonPlan.youtubeVideoIds && lessonPlan.youtubeVideoIds.length > 0 && (
+                        <>
+                            <h3 className="text-lg font-semibold mt-6 flex items-center gap-2">
+                                <Youtube className="text-red-600" />
+                                Recommended Videos
+                            </h3>
+                            <ul className="list-disc pl-5">
+                                {lessonPlan.youtubeVideoIds.map((videoId) => (
+                                    <li key={videoId}>
+                                        <Link href={`https://www.youtube.com/watch?v=${videoId}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                            Watch on YouTube
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </>
+                    )}
                 </CardContent>
                 <CardFooter className="gap-4">
-                    <Button onClick={() => setTutorView('video')}>
-                        <Youtube className="mr-2" />
-                        Watch an Explanation Video
-                    </Button>
                     <Button onClick={resetPractice} variant="secondary">
                        <BrainCircuit className="mr-2" />
-                        Practice
+                        Practice This Topic
                     </Button>
-                </CardFooter>
-            </Card>
-          )}
-
-          {tutorView === 'video' && (
-             <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Youtube className="text-red-600" />
-                        Explanation Video
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {aiVideoUrl ? (
-                         <div className="aspect-video">
-                            <video src={aiVideoUrl} controls className="w-full h-full rounded-lg bg-black" />
-                         </div>
-                    ) : (
-                        <div className="aspect-video">
-                            {!currentVideoId ? (
-                                <div className="w-full h-full rounded-lg bg-muted flex flex-col items-center justify-center text-center p-4">
-                                    <AlertCircle className="h-8 w-8 text-destructive mb-2" />
-                                    <p className="font-semibold">No YouTube Videos Available</p>
-                                    <p className="text-sm text-muted-foreground">
-                                      Try generating an AI video instead.
-                                    </p>
-                                </div>
-                            ) : (
-                                <iframe
-                                    key={currentVideoId}
-                                    className="w-full h-full rounded-lg"
-                                    src={videoEmbedUrl}
-                                    title="YouTube video player"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                ></iframe>
-                            )}
-                        </div>
-                    )}
-                    {currentVideoId && !aiVideoUrl && (
-                         <div className='flex items-center gap-2 mt-2'>
-                            <AlertCircle className='h-4 w-4 text-muted-foreground' />
-                            <p className='text-sm text-muted-foreground'>
-                                If the video is unavailable,
-                                <Button asChild variant="link" className="p-1">
-                                    <Link href={videoWatchUrl} target="_blank" rel="noopener noreferrer">
-                                        watch it on YouTube
-                                    </Link>
-                                </Button>
-                                .
-                            </p>
-                         </div>
-                    )}
-                </CardContent>
-                <CardFooter className='gap-4 justify-between flex-wrap'>
-                    <div className="flex gap-2">
-                        <Button onClick={() => setTutorView('lesson')} variant="outline">Back to Lesson</Button>
-                        <Button onClick={resetPractice} variant="secondary">
-                           <BrainCircuit className="mr-2" />
-                            Practice
-                        </Button>
-                    </div>
-                    <div className="flex gap-2">
-                        {currentVideoId && !aiVideoUrl && (
-                            <Button onClick={handleNextVideo} variant="ghost" disabled={videoIds.length <= 1}>
-                                <RefreshCw className="mr-2" />
-                                Next Video
-                            </Button>
-                        )}
-                        <Button onClick={handleGenerateAiVideo} disabled={isGeneratingVideo}>
-                            {isGeneratingVideo ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Generating...
-                                </>
-                            ) : (
-                                <>
-                                    <Sparkles className="mr-2" />
-                                    Watch AI-generated video
-                                </>
-                            )}
-                        </Button>
-                    </div>
                 </CardFooter>
             </Card>
           )}
@@ -341,3 +229,5 @@ export function PersonalisedTutor() {
     </div>
   );
 }
+
+    
