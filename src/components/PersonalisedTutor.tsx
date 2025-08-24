@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { generateLessonPlan, type LessonPlan } from '@/ai/flows/generate-lesson-plan';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit, RefreshCw, AlertCircle } from 'lucide-react';
+import { Book, CheckCircle2, Pencil, Youtube, BrainCircuit, RefreshCw, AlertCircle, ExternalLink } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -212,11 +212,6 @@ export function PersonalisedTutor() {
                                 <p className="text-sm text-muted-foreground">
                                   This video can't be embedded.
                                 </p>
-                                <Button asChild variant="link" className="mt-2">
-                                    <Link href={videoWatchUrl} target="_blank" rel="noopener noreferrer">
-                                        Watch on YouTube instead
-                                    </Link>
-                                </Button>
                             </div>
                         ) : (
                             <iframe
@@ -230,6 +225,14 @@ export function PersonalisedTutor() {
                             ></iframe>
                         )}
                     </div>
+                    {currentVideoId && (
+                         <Button asChild variant="link" className="mt-2 -ml-4">
+                            <Link href={videoWatchUrl} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                Watch on YouTube
+                            </Link>
+                        </Button>
+                    )}
                 </CardContent>
                 <CardFooter className='gap-4 justify-between'>
                     <div>
