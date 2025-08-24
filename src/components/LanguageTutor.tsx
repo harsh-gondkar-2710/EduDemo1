@@ -9,15 +9,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { languageTutor, type LanguageTutorOutput } from '@/ai/flows/language-tutor';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Languages, Volume2 } from 'lucide-react';
+import { Languages, Volume2, ArrowRightLeft } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 type LanguageTask = 'translate' | 'correct' | 'explain';
+const languages = ['English', 'Marathi', 'Hindi'];
 
 export function LanguageTutor() {
   const [text, setText] = useState('');
   const [task, setTask] = useState<LanguageTask>('translate');
-  const [targetLanguage, setTargetLanguage] = useState('Spanish');
+  const [sourceLanguage, setSourceLanguage] = useState('English');
+  const [targetLanguage, setTargetLanguage] = useState('Marathi');
   const [result, setResult] = useState<LanguageTutorOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -25,12 +27,26 @@ export function LanguageTutor() {
   const handleProcessText = async (e: FormEvent) => {
     e.preventDefault();
     if (!text) return;
+    
+    if (task === 'translate' && sourceLanguage === targetLanguage) {
+        toast({
+            variant: 'destructive',
+            title: 'Invalid Selection',
+            description: 'Source and target languages cannot be the same for translation.',
+        });
+        return;
+    }
 
     setIsLoading(true);
     setResult(null);
 
     try {
-      const response = await languageTutor({ text, task, targetLanguage });
+      const response = await languageTutor({ 
+        text, 
+        task, 
+        sourceLanguage,
+        targetLanguage: task === 'translate' ? targetLanguage : undefined,
+    });
       setResult(response);
     } catch (error) {
       console.error('Failed to process text:', error);
@@ -47,6 +63,11 @@ export function LanguageTutor() {
   const playAudio = (audioDataUri: string) => {
     const audio = new Audio(audioDataUri);
     audio.play();
+  }
+
+  const handleSwapLanguages = () => {
+    setSourceLanguage(targetLanguage);
+    setTargetLanguage(sourceLanguage);
   }
 
   return (
@@ -69,7 +90,7 @@ export function LanguageTutor() {
               className="min-h-[150px]"
               disabled={isLoading}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                <Select onValueChange={(value) => setTask(value as LanguageTask)} defaultValue={task}>
                 <SelectTrigger>
                     <SelectValue placeholder="Select a task" />
@@ -80,24 +101,37 @@ export function LanguageTutor() {
                     <SelectItem value="explain">Explain Grammar</SelectItem>
                 </SelectContent>
                </Select>
-               {task === 'translate' && (
-                <Select onValueChange={setTargetLanguage} defaultValue={targetLanguage}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Spanish">Spanish</SelectItem>
-                        <SelectItem value="French">French</SelectItem>
-                        <SelectItem value="German">German</SelectItem>
-                        <SelectItem value="Japanese">Japanese</SelectItem>
-                        <SelectItem value="Hindi">Hindi</SelectItem>
-                    </SelectContent>
-                </Select>
-               )}
+               
+               <div className='flex items-center gap-2'>
+                    <Select onValueChange={setSourceLanguage} defaultValue={sourceLanguage} value={sourceLanguage}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Source Language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {languages.map(lang => <SelectItem key={`src-${lang}`} value={lang}>{lang}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+
+                    {task === 'translate' && (
+                        <>
+                            <Button type="button" variant="ghost" size="icon" onClick={handleSwapLanguages} aria-label="Swap languages">
+                                <ArrowRightLeft className="h-4 w-4" />
+                            </Button>
+                            <Select onValueChange={setTargetLanguage} defaultValue={targetLanguage} value={targetLanguage}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Target Language" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {languages.map(lang => <SelectItem key={`tgt-${lang}`} value={lang}>{lang}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </>
+                    )}
+               </div>
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || !text}>
               {isLoading ? 'Processing...' : 'Process Text'}
             </Button>
           </CardFooter>

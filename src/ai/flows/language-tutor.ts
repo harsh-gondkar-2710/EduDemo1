@@ -18,6 +18,10 @@ const LanguageTutorInputSchema = z.object({
     .describe(
       'The language task to perform: translate, correct grammar, or explain grammar.'
     ),
+  sourceLanguage: z
+    .string()
+    .optional()
+    .describe('The source language for translation (e.g., "English").'),
   targetLanguage: z
     .string()
     .optional()
@@ -48,12 +52,13 @@ const languageTutorPrompt = ai.definePrompt({
   prompt: `You are an expert language tutor. Perform the requested task on the user's text.
 
   Task: {{{task}}}
+  {{#if sourceLanguage}}Source Language: {{{sourceLanguage}}}{{/if}}
   {{#if targetLanguage}}Target Language: {{{targetLanguage}}}{{/if}}
   User's Text: "{{{text}}}"
 
-  - If the task is 'translate', translate the text to the target language.
-  - If the task is 'correct', correct any grammatical errors in the text and provide the corrected version in the 'processedText' field. Also, provide a brief explanation of the correction in the 'explanation' field.
-  - If the task is 'explain', explain the grammatical concept demonstrated in the text. Put the explanation in the 'explanation' field and return the original text in the 'processedText' field.
+  - If the task is 'translate', translate the text from the source language to the target language.
+  - If the task is 'correct', correct any grammatical errors in the text and provide the corrected version in the 'processedText' field. Also, provide a brief explanation of the correction in the 'explanation' field. The source text is in {{{sourceLanguage}}}.
+  - If the task is 'explain', explain the grammatical concept demonstrated in the text. Put the explanation in the 'explanation' field and return the original text in the 'processedText' field. The source text is in {{{sourceLanguage}}}.
 
   Keep your responses concise and clear.
   `,
