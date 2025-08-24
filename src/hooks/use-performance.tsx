@@ -10,13 +10,12 @@ import {
   useCallback,
   useMemo,
 } from 'react';
-import type { Operation } from '@/lib/math';
 
 type PerformanceRecord = {
   question: string;
   correct: boolean;
   timeTaken: number;
-  operation: Operation;
+  subject: string;
 };
 
 type SessionData = {
@@ -56,10 +55,11 @@ const initialProgressData: ProgressData[] = [
 ];
   
 const initialTopicPerformanceData: TopicPerformanceData[] = [
-    { topic: 'Addition', strength: 95 },
-    { topic: 'Subtraction', strength: 80 },
-    { topic: 'Multiplication', strength: 70 },
-    { topic: 'Division', strength: 60 },
+    { topic: 'Maths', strength: 95 },
+    { topic: 'Indian History', strength: 80 },
+    { topic: 'Social Studies', strength: 75 },
+    { topic: 'GK', strength: 70 },
+    { topic: 'Sciences', strength: 60 },
 ];
 
 export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) => {
@@ -74,38 +74,32 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
     ]);
 
     // 2. Update topic performance data
-    const topicStats: { [key in Operation]: { correct: number, total: number } } = {
-        '+': { correct: 0, total: 0 },
-        '-': { correct: 0, total: 0 },
-        '×': { correct: 0, total: 0 },
-        '÷': { correct: 0, total: 0 },
-    };
+    const topicStats: { [key: string]: { correct: number, total: number } } = {};
 
     sessionData.performanceHistory.forEach(record => {
-        topicStats[record.operation].total += 1;
-        if (record.correct) {
-            topicStats[record.operation].correct += 1;
-        }
+      if (!topicStats[record.subject]) {
+        topicStats[record.subject] = { correct: 0, total: 0 };
+      }
+      topicStats[record.subject].total += 1;
+      if (record.correct) {
+        topicStats[record.subject].correct += 1;
+      }
     });
-
-    const topicMap: { [key in Operation]: string } = {
-        '+': 'Addition',
-        '-': 'Subtraction',
-        '×': 'Multiplication',
-        '÷': 'Division',
-    };
 
     setTopicPerformanceData(prev => {
         const newData = [...prev];
-        Object.entries(topicStats).forEach(([op, stats]) => {
+        Object.entries(topicStats).forEach(([subject, stats]) => {
             if (stats.total > 0) {
-                const topicName = topicMap[op as Operation];
-                const topicIndex = newData.findIndex(t => t.topic === topicName);
+                const topicIndex = newData.findIndex(t => t.topic === subject);
+                const sessionStrength = (stats.correct / stats.total) * 100;
+
                 if (topicIndex !== -1) {
                     const oldStrength = newData[topicIndex].strength;
-                    const sessionStrength = (stats.correct / stats.total) * 100;
                     // Weighted average, giving new session more weight
                     newData[topicIndex].strength = (oldStrength * 2 + sessionStrength) / 3;
+                } else {
+                    // Add new subject if it doesn't exist
+                    newData.push({ topic: subject, strength: sessionStrength });
                 }
             }
         });

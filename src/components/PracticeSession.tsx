@@ -17,13 +17,13 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Label } from './ui/label';
 
 const TOTAL_QUESTIONS = 10;
-const SUBJECTS = ["Mathematics", "US History", "Biology", "General Knowledge"];
+const SUBJECTS = ["Maths", "Indian History", "Social Studies", "GK", "Sciences"];
 
 type PerformanceRecord = {
   question: string;
   correct: boolean;
   timeTaken: number;
-  operation: string; // Using string for subject
+  subject: string;
 };
 
 export function PracticeSession() {
@@ -125,7 +125,7 @@ export function PracticeSession() {
     const timeTaken = (Date.now() - startTime) / 1000;
     setPerformanceHistory(prev => [
       ...prev,
-      { question: currentQuestion.questionText, correct: isCorrect, timeTaken, operation: subject },
+      { question: currentQuestion.questionText, correct: isCorrect, timeTaken, subject },
     ]);
 
     if (isCorrect) {
