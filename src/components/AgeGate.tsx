@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePerformance } from '@/hooks/use-performance';
 import {
   Dialog,
@@ -14,10 +14,26 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/use-auth';
 
 export function AgeGate() {
   const { age, setAge, isAgeGateOpen, setAgeGateOpen } = usePerformance();
+  const { user, loading } = useAuth();
   const [ageInput, setAgeInput] = useState('');
+  
+  // This effect ensures we only show the gate if the user is logged in but has no age set.
+  // This handles the case for users who sign in with Google.
+  useEffect(() => {
+    if (!loading && user && !age) {
+        const storedAge = localStorage.getItem('userAge');
+        if (!storedAge) {
+            setAgeGateOpen(true);
+        } else {
+            setAge(parseInt(storedAge, 10));
+        }
+    }
+  }, [user, loading, age, setAge, setAgeGateOpen]);
+
 
   const handleSave = () => {
     const newAge = parseInt(ageInput, 10);
@@ -25,6 +41,11 @@ export function AgeGate() {
       setAge(newAge);
     }
   };
+
+  // Don't render the dialog if the user is not logged in, as login flow will handle age now.
+  if (!user) {
+    return null;
+  }
 
   return (
     <Dialog open={isAgeGateOpen} onOpenChange={setAgeGateOpen}>

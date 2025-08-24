@@ -71,7 +71,8 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
     if (storedAge) {
       setAgeState(parseInt(storedAge, 10));
     } else {
-      setAgeGateOpen(true);
+      // Don't open the age gate immediately, let protected routes handle login flow
+      // setAgeGateOpen(true);
     }
 
     const handleStorageChange = () => {

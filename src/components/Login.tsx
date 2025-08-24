@@ -17,11 +17,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { usePerformance } from '@/hooks/use-performance';
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [age, setAge] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -31,6 +33,7 @@ export function Login() {
     signInWithGoogle,
     user,
   } = useAuth();
+  const { setAge: setPerformanceAge } = usePerformance();
 
   useEffect(() => {
     if (user) {
@@ -58,7 +61,17 @@ export function Login() {
             setLoading(false);
             return;
         }
+        if (!age || isNaN(parseInt(age, 10))) {
+            toast({
+                variant: 'destructive',
+                title: 'Valid Age Required',
+                description: 'Please enter a valid age to sign up.',
+            });
+            setLoading(false);
+            return;
+        }
         await signUpWithEmail(email, password, username);
+        setPerformanceAge(parseInt(age, 10));
       }
       toast({
         title: 'Success!',
@@ -150,6 +163,17 @@ export function Login() {
                 placeholder="your_username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="age-signup">Age</Label>
+              <Input
+                id="age-signup"
+                type="number"
+                placeholder="your_age"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
                 disabled={loading}
               />
             </div>
