@@ -11,7 +11,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format, differenceInDays, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Separator } from './ui/separator';
 
 type Goal = {
   id: number;
@@ -47,6 +46,8 @@ export function StudyGoals() {
   useEffect(() => {
     // Persist goals to localStorage whenever they change
     localStorage.setItem('studyGoals', JSON.stringify(goals));
+    // Dispatch a custom event so the dashboard can update in real-time
+    window.dispatchEvent(new CustomEvent('studyGoalsUpdated'));
   }, [goals]);
 
 
@@ -223,7 +224,7 @@ export function StudyGoals() {
                                     className="text-sm font-medium leading-none line-through text-muted-foreground"
                                 >
                                     {goal.text}
-                                </label>
+                                 </label>
                             </div>
                             <Button variant="ghost" size="icon" onClick={() => deleteGoal(goal.id)}>
                                 <Trash2 className="h-4 w-4 text-muted-foreground" />

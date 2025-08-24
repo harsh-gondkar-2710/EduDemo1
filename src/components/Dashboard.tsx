@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts';
-import { TrendingUp, Award, Bot, ScanSearch, PencilRuler, Map, Goal, Lock } from 'lucide-react';
+import { TrendingUp, Award, Bot, ScanSearch, PencilRuler, Map, Goal, Lock, Star } from 'lucide-react';
 import { usePerformance } from '@/hooks/use-performance';
 import { AgeGate } from './AgeGate';
 import { Badge } from './ui/badge';
@@ -33,26 +33,32 @@ const motivationalQuotes = [
 ];
 
 export function Dashboard() {
-  const { progressData, overallProgress, completedGoalsCount } = usePerformance();
+  const { progressData, overallProgress, completedGoalsCount, sessionCount } = usePerformance();
   const [quote, setQuote] = useState('');
 
   useEffect(() => {
     setQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
   }, []);
 
-  const lastWeekProgress = useMemo(() => {
+  const lastSessionProgress = useMemo(() => {
     if (progressData.length < 2) return 0;
     const lastScore = progressData[progressData.length - 1].score;
     const secondLastScore = progressData[progressData.length - 2].score;
-    if (secondLastScore === 0) return lastScore > 0 ? 100 : 0;
+    if (secondLastScore === 0 && lastScore > 0) return 100;
+    if (secondLastScore === 0) return 0;
     return Math.round(((lastScore - secondLastScore) / secondLastScore) * 100);
   }, [progressData]);
-
+  
   const allBadges = useMemo(() => [
-    { name: 'High Achiever', description: 'Maintain an overall score above 80%.', earned: overallProgress > 80 },
-    { name: 'Consistent Learner', description: 'Complete 5 practice sessions.', earned: progressData.length >= 5 },
-    { name: 'Goal Setter', description: 'Complete 5 study goals.', earned: completedGoalsCount >= 5 },
-  ], [overallProgress, progressData.length, completedGoalsCount]);
+    { name: 'High Achiever I', description: 'Overall score > 80%', earned: overallProgress > 80, icon: Star },
+    { name: 'High Achiever II', description: 'Overall score > 90%', earned: overallProgress > 90, icon: Star },
+    { name: 'Consistent Learner I', description: 'Complete 5 sessions', earned: sessionCount >= 5, icon: TrendingUp },
+    { name: 'Consistent Learner II', description: 'Complete 10 sessions', earned: sessionCount >= 10, icon: TrendingUp },
+    { name: 'Consistent Learner III', description: 'Complete 20 sessions', earned: sessionCount >= 20, icon: TrendingUp },
+    { name: 'Goal Setter I', description: 'Complete 5 goals', earned: completedGoalsCount >= 5, icon: Goal },
+    { name: 'Goal Setter II', description: 'Complete 10 goals', earned: completedGoalsCount >= 10, icon: Goal },
+    { name: 'Goal Setter III', description: 'Complete 20 goals', earned: completedGoalsCount >= 20, icon: Goal },
+  ], [overallProgress, sessionCount, completedGoalsCount]);
 
   const earnedBadges = allBadges.filter(b => b.earned);
   const unearnedBadges = allBadges.filter(b => !b.earned);
@@ -74,7 +80,7 @@ export function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{Math.round(overallProgress)}%</div>
             <p className="text-xs text-muted-foreground">
-                {lastWeekProgress >= 0 ? `+${lastWeekProgress}` : lastWeekProgress}% from last session
+                {lastSessionProgress >= 0 ? `+${lastSessionProgress}` : lastSessionProgress}% from last session
             </p>
           </CardContent>
         </Card>
@@ -114,7 +120,8 @@ export function Dashboard() {
                      <div className="flex flex-wrap gap-4">
                         {earnedBadges.length > 0 ? (
                             earnedBadges.map(badge => (
-                                <Badge key={badge.name} variant="default" className="text-base py-2 px-4">
+                                <Badge key={badge.name} variant="default" className="text-base py-2 px-4 flex items-center gap-2">
+                                   <badge.icon className="h-4 w-4" />
                                    {badge.name}
                                 </Badge>
                             ))

@@ -29,11 +29,6 @@ type ProgressData = {
     score: number;
 }
 
-type TopicPerformanceData = {
-    topic: string;
-    strength: number;
-}
-
 type Goal = {
     id: number;
     text: string;
@@ -43,10 +38,8 @@ type Goal = {
 
 interface PerformanceContextType {
   progressData: ProgressData[];
-  topicPerformanceData: TopicPerformanceData[];
+  sessionCount: number;
   overallProgress: number;
-  strengths: string[];
-  weaknesses: string[];
   completedGoalsCount: number;
   age: number | null;
   setAge: (age: number) => void;
@@ -66,18 +59,9 @@ const initialProgressData: ProgressData[] = [
     { date: 'Day 5', score: 85 },
     { date: 'Day 6', score: 90 },
 ];
-  
-const initialTopicPerformanceData: TopicPerformanceData[] = [
-    { topic: 'Basic Maths', strength: 95 },
-    { topic: 'Physics', strength: 80 },
-    { topic: 'Chemistry', strength: 75 },
-    { topic: 'GK', strength: 70 },
-    { topic: 'Biology', strength: 60 },
-];
 
 export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [progressData, setProgressData] = useState<ProgressData[]>(initialProgressData);
-  const [topicPerformanceData, setTopicPerformanceData] = useState<TopicPerformanceData[]>(initialTopicPerformanceData);
   const [completedGoalsCount, setCompletedGoalsCount] = useState(0);
   const [age, setAgeState] = useState<number | null>(null);
   const [isAgeGateOpen, setAgeGateOpen] = useState(false);
@@ -90,15 +74,29 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
       setAgeGateOpen(true);
     }
 
-    const storedGoals = localStorage.getItem('studyGoals');
-    if (storedGoals) {
-        try {
-            const parsedGoals: Goal[] = JSON.parse(storedGoals);
-            setCompletedGoalsCount(parsedGoals.filter(g => g.completed).length);
-        } catch (e) {
-            console.error("Failed to parse study goals for dashboard", e);
+    const handleStorageChange = () => {
+        const storedGoals = localStorage.getItem('studyGoals');
+        if (storedGoals) {
+            try {
+                const parsedGoals: Goal[] = JSON.parse(storedGoals);
+                setCompletedGoalsCount(parsedGoals.filter(g => g.completed).length);
+            } catch (e) {
+                console.error("Failed to parse study goals for dashboard", e);
+            }
         }
-    }
+    };
+
+    handleStorageChange(); // Initial check
+    window.addEventListener('storage', handleStorageChange); // Listen for changes from other tabs
+    
+    // Custom event listener for same-tab updates
+    window.addEventListener('studyGoalsUpdated', handleStorageChange);
+
+    return () => {
+        window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('studyGoalsUpdated', handleStorageChange);
+    };
+
   }, []);
   
   const setAge = (newAge: number) => {
@@ -109,42 +107,10 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
 
   const addSessionData = useCallback((sessionData: SessionData) => {
     // 1. Update progress data
-    setProgressData(prev => [
-      ...prev,
-      { date: `Day ${prev.length + 1}`, score: sessionData.score },
-    ]);
-
-    // 2. Update topic performance data
-    const topicStats: { [key: string]: { correct: number, total: number } } = {};
-
-    sessionData.performanceHistory.forEach(record => {
-      if (!topicStats[record.subject]) {
-        topicStats[record.subject] = { correct: 0, total: 0 };
-      }
-      topicStats[record.subject].total += 1;
-      if (record.correct) {
-        topicStats[record.subject].correct += 1;
-      }
-    });
-
-    setTopicPerformanceData(prev => {
-        const newData = [...prev];
-        Object.entries(topicStats).forEach(([subject, stats]) => {
-            if (stats.total > 0) {
-                const topicIndex = newData.findIndex(t => t.topic === subject);
-                const sessionStrength = (stats.correct / stats.total) * 100;
-
-                if (topicIndex !== -1) {
-                    const oldStrength = newData[topicIndex].strength;
-                    // Weighted average, giving new session more weight
-                    newData[topicIndex].strength = Math.round((oldStrength * 2 + sessionStrength) / 3);
-                } else {
-                    // Add new subject if it doesn't exist
-                    newData.push({ topic: subject, strength: Math.round(sessionStrength) });
-                }
-            }
-        });
-        return newData.sort((a,b) => b.strength - a.strength);
+    setProgressData(prev => {
+        const newData = [...prev, { date: `Day ${prev.length + 1}`, score: sessionData.score }];
+        // You might want to persist this to localStorage as well
+        return newData;
     });
 
   }, []);
@@ -155,20 +121,12 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
     return totalScore / progressData.length;
   }, [progressData]);
 
-  const { strengths, weaknesses } = useMemo(() => {
-    const sortedTopics = [...topicPerformanceData].sort((a, b) => b.strength - a.strength);
-    return {
-        strengths: sortedTopics.slice(0, 1).map(t => t.topic),
-        weaknesses: sortedTopics.slice(-1).map(t => t.topic),
-    }
-  }, [topicPerformanceData]);
+  const sessionCount = useMemo(() => progressData.length, [progressData]);
 
   const value = {
     progressData,
-    topicPerformanceData,
+    sessionCount,
     overallProgress,
-    strengths,
-    weaknesses,
     completedGoalsCount,
     age,
     setAge,
