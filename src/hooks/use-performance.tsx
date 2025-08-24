@@ -11,6 +11,7 @@ import {
   useMemo,
   useEffect,
 } from 'react';
+import { useAuth } from './use-auth';
 
 type PerformanceRecord = {
   question: string;
@@ -43,8 +44,7 @@ interface PerformanceContextType {
   completedGoalsCount: number;
   age: number | null;
   setAge: (age: number) => void;
-  isAgeGateOpen: boolean;
-  setAgeGateOpen: (isOpen: boolean) => void;
+  loading: boolean;
   addSessionData: (sessionData: SessionData) => void;
 }
 
@@ -54,27 +54,47 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
   const [progressData, setProgressData] = useState<ProgressData[]>([]);
   const [completedGoalsCount, setCompletedGoalsCount] = useState(0);
   const [age, setAgeState] = useState<number | null>(null);
-  const [isAgeGateOpen, setAgeGateOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  
+  const getStorageKey = (key: string) => user ? `${key}_${user.uid}` : null;
 
   useEffect(() => {
-    // Load persisted progress data
-    const storedProgress = localStorage.getItem('progressData');
-    if (storedProgress) {
-      try {
-        setProgressData(JSON.parse(storedProgress));
-      } catch (e) {
-        console.error("Failed to parse progress data from localStorage", e);
-        localStorage.removeItem('progressData');
-      }
-    }
-    
-    const storedAge = localStorage.getItem('userAge');
-    if (storedAge) {
-      setAgeState(parseInt(storedAge, 10));
+    if (user) {
+        setLoading(true);
+        // Load persisted progress data for the logged-in user
+        const progressKey = getStorageKey('progressData');
+        const storedProgress = progressKey ? localStorage.getItem(progressKey) : null;
+        if (storedProgress) {
+            try {
+                setProgressData(JSON.parse(storedProgress));
+            } catch (e) {
+                console.error("Failed to parse progress data from localStorage", e);
+                localStorage.removeItem(progressKey!);
+            }
+        } else {
+            setProgressData([]); // Reset for new user
+        }
+        
+        // Load age
+        const ageKey = getStorageKey('userAge');
+        const storedAge = ageKey ? localStorage.getItem(ageKey) : null;
+        if (storedAge) {
+            setAgeState(parseInt(storedAge, 10));
+        } else {
+            setAgeState(null); // Reset for new user
+        }
+        setLoading(false);
+    } else {
+        // Clear data if user logs out
+        setProgressData([]);
+        setAgeState(null);
+        setCompletedGoalsCount(0);
     }
 
     const handleStorageChange = () => {
-        const storedGoals = localStorage.getItem('studyGoals');
+        const goalsKey = getStorageKey('studyGoals');
+        const storedGoals = goalsKey ? localStorage.getItem(goalsKey) : null;
         if (storedGoals) {
             try {
                 const parsedGoals: Goal[] = JSON.parse(storedGoals);
@@ -82,13 +102,13 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
             } catch (e) {
                 console.error("Failed to parse study goals for dashboard", e);
             }
+        } else {
+            setCompletedGoalsCount(0);
         }
     };
 
     handleStorageChange(); // Initial check
-    window.addEventListener('storage', handleStorageChange); // Listen for changes from other tabs
-    
-    // Custom event listener for same-tab updates
+    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('studyGoalsUpdated', handleStorageChange);
 
     return () => {
@@ -96,22 +116,27 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
         window.removeEventListener('studyGoalsUpdated', handleStorageChange);
     };
 
-  }, []);
+  }, [user]);
   
   const setAge = (newAge: number) => {
     setAgeState(newAge);
-    localStorage.setItem('userAge', newAge.toString());
-    setAgeGateOpen(false);
+    const ageKey = getStorageKey('userAge');
+    if (ageKey) {
+        localStorage.setItem(ageKey, newAge.toString());
+    }
   }
 
   const addSessionData = useCallback((sessionData: SessionData) => {
     setProgressData(prev => {
         const newData = [...prev, { date: `Day ${prev.length + 1}`, score: sessionData.score }];
-        localStorage.setItem('progressData', JSON.stringify(newData));
+        const progressKey = getStorageKey('progressData');
+        if (progressKey) {
+            localStorage.setItem(progressKey, JSON.stringify(newData));
+        }
         return newData;
     });
 
-  }, []);
+  }, [user]);
   
   const overallProgress = useMemo(() => {
     if (progressData.length === 0) return 0;
@@ -128,8 +153,7 @@ export const PerformanceProvider: FC<{ children: ReactNode }> = ({ children }) =
     completedGoalsCount,
     age,
     setAge,
-    isAgeGateOpen,
-    setAgeGateOpen,
+    loading,
     addSessionData,
   };
 

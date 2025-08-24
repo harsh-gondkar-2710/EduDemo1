@@ -9,7 +9,6 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '
 import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart, Cell } from 'recharts';
 import { TrendingUp, Award, Bot, ScanSearch, PencilRuler, Map, Goal, Lock, Star } from 'lucide-react';
 import { usePerformance } from '@/hooks/use-performance';
-import { AgeGate } from './AgeGate';
 import { Badge } from './ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -20,7 +19,7 @@ const chartConfig: ChartConfig = {
 };
 
 const appFeatures = [
-    { href: '/tutor', label: 'Personalised Tutor', icon: Bot, description: 'Get custom lessons on any topic.' },
+    { href: '/tutor', label: 'AI Tutor', icon: Bot, description: 'Get custom lessons on any topic.' },
     { href: '/solver', label: 'Solver', icon: ScanSearch, description: 'Solve problems from text or images.' },
     { href: '/practice', label: 'Practice', icon: PencilRuler, description: 'Test your knowledge with adaptive quizzes.' },
     { href: '/career', label: 'Career Mapper', icon: Map, description: 'Generate a learning roadmap for your career.' },
@@ -69,7 +68,6 @@ export function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <AgeGate />
       <div className="text-center">
         <h1 className="text-4xl font-bold">Welcome, {user?.displayName || 'Learner'}!</h1>
         <p className="text-muted-foreground mt-2 italic">"{quote}"</p>

@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format, differenceInDays, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 type Goal = {
   id: number;
@@ -23,32 +24,56 @@ export function StudyGoals() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [newGoal, setNewGoal] = useState('');
   const [deadline, setDeadline] = useState<Date | undefined>();
+  const { user } = useAuth();
+
+  const getStorageKey = (key: string) => user ? `${key}_${user.uid}` : null;
 
   useEffect(() => {
-    const storedGoals = localStorage.getItem('studyGoals');
+    if (!user) return;
+    const goalsKey = getStorageKey('studyGoals');
+    const storedGoals = goalsKey ? localStorage.getItem(goalsKey) : null;
     if (storedGoals) {
       try {
-        const parsedGoals: string[] | Goal[] = JSON.parse(storedGoals);
-        // Handle both old (string array) and new (Goal object array) formats
-        if (Array.isArray(parsedGoals) && typeof parsedGoals[0] === 'string') {
-          setGoals((parsedGoals as string[]).map((text, index) => ({ id: Date.now() + index, text, completed: false, deadline: null })));
-        } else {
-          setGoals(parsedGoals as Goal[]);
-        }
+        const parsedGoals: Goal[] = JSON.parse(storedGoals);
+        setGoals(parsedGoals);
       } catch (e) {
         console.error("Failed to parse study goals from localStorage", e);
-        // Clear corrupted data
-        localStorage.removeItem('studyGoals');
+        if (goalsKey) {
+            localStorage.removeItem(goalsKey);
+        }
+      }
+    } else {
+      // Handle the case where a user logs in for the first time
+      // Check for goals from a previous unauthenticated session
+      const oldGoals = localStorage.getItem('studyGoals');
+      if (oldGoals) {
+        try {
+          const parsedOld: string[] | Goal[] = JSON.parse(oldGoals);
+          const formattedGoals = (Array.isArray(parsedOld) && typeof parsedOld[0] === 'string')
+            ? (parsedOld as string[]).map((text, index) => ({ id: Date.now() + index, text, completed: false, deadline: null }))
+            : parsedOld as Goal[];
+          
+          setGoals(formattedGoals);
+          localStorage.removeItem('studyGoals'); // Remove the old non-user-specific goals
+        } catch (e) {
+          localStorage.removeItem('studyGoals');
+        }
+      } else {
+        setGoals([]);
       }
     }
-  }, []);
+  }, [user]);
   
   useEffect(() => {
+    if (!user) return;
     // Persist goals to localStorage whenever they change
-    localStorage.setItem('studyGoals', JSON.stringify(goals));
+    const goalsKey = getStorageKey('studyGoals');
+    if (goalsKey) {
+        localStorage.setItem(goalsKey, JSON.stringify(goals));
+    }
     // Dispatch a custom event so the dashboard can update in real-time
     window.dispatchEvent(new CustomEvent('studyGoalsUpdated'));
-  }, [goals]);
+  }, [goals, user]);
 
 
   const handleAddGoal = (e: React.FormEvent) => {
@@ -83,16 +108,27 @@ export function StudyGoals() {
     }
     
     const daysUntil = differenceInDays(deadLineDate, today);
-    if (daysUntil >= 0 && daysUntil <= 3) {
-      return { text: `Due in ${daysUntil + 1} day(s)`, color: 'text-orange-600 dark:text-orange-500', icon: <Clock className="h-3 w-3" /> };
+    if (daysUntil === 0) {
+      return { text: 'Due today', color: 'text-orange-600 dark:text-orange-500', icon: <Clock className="h-3 w-3" /> };
+    }
+    if (daysUntil > 0 && daysUntil <= 3) {
+      return { text: `Due in ${daysUntil + 1} days`, color: 'text-orange-600 dark:text-orange-500', icon: <Clock className="h-3 w-3" /> };
     }
     
     return null;
   }
 
   const { activeGoals, completedGoals } = useMemo(() => {
+    const sortedActive = goals
+      .filter(g => !g.completed)
+      .sort((a, b) => {
+        if (!a.deadline) return 1;
+        if (!b.deadline) return -1;
+        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+      });
+
     return {
-      activeGoals: goals.filter(g => !g.completed),
+      activeGoals: sortedActive,
       completedGoals: goals.filter(g => g.completed),
     };
   }, [goals]);
