@@ -1,14 +1,14 @@
 
 'use client';
 
-import { PersonalisedTutor } from '@/components/PersonalisedTutor';
+import { Solver } from '@/components/Solver';
 import { SidebarInset } from '@/components/ui/sidebar';
 
-export default function TutorPage() {
+export default function SolverPage() {
   return (
     <SidebarInset>
       <div className="container mx-auto px-4 py-8 md:px-6">
-        <PersonalisedTutor />
+        <Solver />
       </div>
     </SidebarInset>
   );

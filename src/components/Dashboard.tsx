@@ -174,7 +174,7 @@ export function Dashboard() {
         </CardContent>
         <CardFooter>
           <Button onClick={handleGetRecommendations} disabled={isLoading}>
-            {isLoading ? 'Generating...' : 'Get AI Recommendations'}
+            {isLoading ? 'Generating...' : 'Get Personalised Recommendations'}
           </Button>
         </CardFooter>
       </Card>
