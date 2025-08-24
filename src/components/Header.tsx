@@ -12,6 +12,7 @@ export function Header() {
   const navItems = [
     { href: '/', label: 'Dashboard' },
     { href: '/practice', label: 'Practice' },
+    { href: '/tutor', label: 'AI Tutor' },
   ];
 
   return (
