@@ -12,7 +12,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GeneratePracticeQuestionInputSchema = z.object({
-  subject: z.string().describe('The subject for the practice question (e.g., "Calculus", "Physics", "General"). If "General", pick a topic from any subject.'),
+  subject: z.string().describe('The subject for the practice question (e.g., "Calculus", "Physics", "Random"). If "Random", pick a topic from any subject.'),
   difficulty: z
     .number()
     .min(1)
@@ -48,7 +48,7 @@ const practiceQuestionPrompt = ai.definePrompt({
   output: { schema: PracticeQuestionSchema },
   prompt: `You are an expert tutor. Your task is to generate a single multiple-choice practice question for a student.
 
-  The subject is: {{{subject}}}. If the subject is 'General', you can choose a topic from any field like Math, Science, History, or General Knowledge.
+  The subject is: {{{subject}}}. If the subject is 'Random', you can choose a topic from any field like Math, Science, History, or General Knowledge.
   The difficulty level (1-10) is: {{{difficulty}}}
   {{#if age}}The student's age is: {{{age}}}{{/if}}
 
