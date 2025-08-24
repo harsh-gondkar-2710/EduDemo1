@@ -3,13 +3,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BrainCircuit, Bot, Target, Languages, PenSquare, ScanSearch, PencilRuler, Map, Goal } from 'lucide-react';
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import { BrainCircuit, Bot, Target, Languages, PenSquare, ScanSearch, PencilRuler, Map, Goal, LogIn, LogOut } from 'lucide-react';
+import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, useSidebar, SidebarFooter } from '@/components/ui/sidebar';
 import { ThemeToggle } from './ThemeToggle';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from './ui/button';
+import { Separator } from './ui/separator';
 
 export function Header() {
   const pathname = usePathname();
   const { state } = useSidebar();
+  const { user, logout, loading } = useAuth();
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: Target },
@@ -52,6 +56,26 @@ export function Header() {
           ))}
         </SidebarMenu>
       </div>
+      <SidebarFooter>
+        <Separator className="my-2" />
+        <SidebarMenu>
+            <SidebarMenuItem>
+                {user ? (
+                    <SidebarMenuButton onClick={logout} tooltip="Logout" className="justify-start w-full">
+                        <LogOut />
+                        <span className={`${state === 'collapsed' && 'md:hidden'}`}>Logout</span>
+                    </SidebarMenuButton>
+                ) : (
+                    <Link href="/login" className='w-full'>
+                        <SidebarMenuButton tooltip="Login" className="justify-start">
+                            <LogIn />
+                            <span className={`${state === 'collapsed' && 'md:hidden'}`}>Login</span>
+                        </SidebarMenuButton>
+                    </Link>
+                )}
+            </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </>
   );
 }
