@@ -72,13 +72,9 @@ export function PersonalisedTutor() {
   const handleNextVideo = () => {
     if (videoIds.length > 1) {
         setVideoError(false);
-        // Create a new array with the current video ID moved to the end,
-        // effectively cycling to the next one.
-        setVideoIds(prevIds => {
-            const [first, ...rest] = prevIds;
-            return [...rest, first];
-        });
-    } else if (videoIds.length === 1) {
+        // Remove the first video and cycle to the next one.
+        setVideoIds(prevIds => prevIds.slice(1));
+    } else {
         toast({
             title: "Last Video",
             description: "You've seen all the available videos for this topic."
@@ -328,3 +324,5 @@ export function PersonalisedTutor() {
 }
 
   
+
+    
