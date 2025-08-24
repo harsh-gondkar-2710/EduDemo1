@@ -19,7 +19,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       )}
       <main className={cn(
         "flex-1 flex flex-col",
-        isLoginPage && "items-center justify-center"
+        isLoginPage && "items-end justify-center pr-16"
       )}>
         {!isLoginPage && (
             <div className="md:hidden">
