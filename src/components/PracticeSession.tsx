@@ -144,11 +144,12 @@ export function PracticeSession({ subject, onBack }: PracticeSessionProps) {
   const handleSubmit = () => {
     if (feedback || !currentQuestion || !subject || selectedAnswers.length === 0) return;
 
-    // Normalize and sort both selected and correct answers for reliable comparison
-    const sortedSelected = [...selectedAnswers].map(s => s.trim().toLowerCase()).sort();
-    const sortedCorrect = [...currentQuestion.correctAnswers].map(s => s.trim().toLowerCase()).sort();
-    const isCorrect = JSON.stringify(sortedSelected) === JSON.stringify(sortedCorrect);
+    const correctAnswersSet = new Set(currentQuestion.correctAnswers.map(ans => ans.trim()));
+    const selectedAnswersSet = new Set(selectedAnswers.map(ans => ans.trim()));
 
+    const isCorrect = correctAnswersSet.size === selectedAnswersSet.size &&
+                      [...correctAnswersSet].every(ans => selectedAnswersSet.has(ans));
+    
     const timeTaken = (Date.now() - startTime) / 1000;
     setPerformanceHistory(prev => [
       ...prev,
