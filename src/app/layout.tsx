@@ -4,6 +4,7 @@ import './globals.css';
 import { Header } from '@/components/Header';
 import { Toaster } from '@/components/ui/toaster';
 import { Providers } from '@/components/Providers';
+import { Sidebar } from '@/components/ui/sidebar';
 
 export const metadata: Metadata = {
   title: 'AdaptiLearn',
@@ -31,9 +32,16 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <Providers>
-            <div className="relative flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">{children}</main>
+            <div className="relative flex min-h-screen">
+              <Sidebar side="left" collapsible="icon" className="border-r hidden md:flex">
+                  <Header />
+              </Sidebar>
+              <main className="flex-1 flex flex-col">
+                <div className='md:hidden'>
+                  <Header/>
+                </div>
+                {children}
+              </main>
             </div>
             <Toaster />
         </Providers>
