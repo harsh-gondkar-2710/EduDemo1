@@ -17,7 +17,7 @@ export function Header() {
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: Target },
-    { href: '/tutor', label: 'Personalised Tutor', icon: Bot },
+    { href: '/tutor', label: 'AI Tutor', icon: Bot },
     { href: '/solver', label: 'Solver', icon: ScanSearch },
     { href: '/language', label: 'Language', icon: Languages },
     { href: '/essay-grading', label: 'Essay Grading', icon: PenSquare },
