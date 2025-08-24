@@ -42,7 +42,8 @@ export function PersonalisedTutor() {
     try {
       const result = await generateLessonPlan({ topic: `${topic} (in the context of ${subject})` });
       setLessonPlan(result);
-    } catch (error)      toast({
+    } catch (error) {
+      toast({
         variant: 'destructive',
         title: 'AI Error',
         description: 'Could not generate a lesson plan for this topic.',
@@ -229,5 +230,3 @@ export function PersonalisedTutor() {
     </div>
   );
 }
-
-    
