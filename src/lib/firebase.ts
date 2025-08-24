@@ -5,12 +5,12 @@ import { getAuth } from "firebase/auth";
 
 // Your Firebase project configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDaR_PgOPoGi3NheLWE6gqU3K5fR_xmLlU",
-  authDomain: "adaptilearn-jl2sn.firebaseapp.com",
-  projectId: "adaptilearn-jl2sn",
-  storageBucket: "adaptilearn-jl2sn.firebasestorage.app",
-  messagingSenderId: "241388972786",
-  appId: "1:241388972786:web:145eca90ce727942477e6b"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 // Initialize Firebase
